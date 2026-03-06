@@ -28,6 +28,7 @@ public class Main {
         System.out.println("  DAO Layer and Full CRUD - STAGE 1");
         System.out.println("------------------------------------------------\n");
 
+
         int testId = -1;
 
         try {
@@ -68,12 +69,14 @@ public class Main {
 
             // ===== F7: UPDATE MEMBER =====
             System.out.println("--- F7: UPDATE MEMBER ---");
-            boolean updated = memberDao.update(testId, "Updated Name F7", "Updated Address", "087-999-8888");
-            System.out.println("   Update result: " + (updated ? "SUCCESS ✓" : "FAILED"));
+            Member updatedMember = new Member("Updated Name F7", "Updated Address", "087-999-8888");
+            Member result = memberDao.update(testId, updatedMember);  // Now returns Member
 
-            Optional<Member> afterUpdate = memberDao.findById(testId);
-            afterUpdate.ifPresent(m -> System.out.println("   After update: " + m));
-            System.out.println();
+            if (result != null) {
+                System.out.println("   Update successful: " + result);
+            } else {
+                System.out.println("   Update failed");
+            }
 
             // ===== F8: FILTER WITH PREDICATE =====
             System.out.println("--- F8: FILTER WITH PREDICATE ---");
