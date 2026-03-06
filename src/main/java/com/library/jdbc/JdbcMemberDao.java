@@ -1,5 +1,6 @@
-package com.library.dao;
+package com.library.jdbc;
 
+import com.library.dao.MemberDao;
 import com.library.domain.Member;
 import com.library.db.DatabaseConnection;
 
@@ -19,7 +20,7 @@ public class JdbcMemberDao implements MemberDao {
         if (phone == null || phone.trim().isEmpty())
             throw new IllegalArgumentException("phone is required");
 
-        String sql = "INSERT INTO Member (Name, Address, Phone) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO member (name, address, phone) VALUES (?, ?, ?)";
 
         try (Connection c = DatabaseConnection.getConnection();
              PreparedStatement ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -45,7 +46,7 @@ public class JdbcMemberDao implements MemberDao {
         if (id <= 0)
             return Optional.empty();
 
-        String sql = "SELECT MemberID, Name, Address, Phone FROM Member WHERE MemberID = ?";
+        String sql = "SELECT id, name, address, phone FROM member WHERE id = ?";
 
         try (Connection c = DatabaseConnection.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
@@ -63,7 +64,7 @@ public class JdbcMemberDao implements MemberDao {
 
     @Override
     public List<Member> findAll() throws Exception {
-        String sql = "SELECT MemberID, Name, Address, Phone FROM Member ORDER BY MemberID";
+        String sql = "SELECT id, name, address, phone FROM member ORDER BY id";
 
         try (Connection c = DatabaseConnection.getConnection();
              PreparedStatement ps = c.prepareStatement(sql);
@@ -89,7 +90,7 @@ public class JdbcMemberDao implements MemberDao {
         if (phone == null || phone.trim().isEmpty())
             throw new IllegalArgumentException("phone is required");
 
-        String sql = "UPDATE Member SET Name = ?, Address = ?, Phone = ? WHERE MemberID = ?";
+        String sql = "UPDATE member SET name = ?, address = ?, phone = ? WHERE id = ?";
 
         try (Connection c = DatabaseConnection.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
@@ -108,7 +109,7 @@ public class JdbcMemberDao implements MemberDao {
         if (id <= 0)
             return false;
 
-        String sql = "DELETE FROM Member WHERE MemberID = ?";
+        String sql = "DELETE FROM member WHERE id = ?";
 
         try (Connection c = DatabaseConnection.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
@@ -119,10 +120,10 @@ public class JdbcMemberDao implements MemberDao {
     }
 
     private Member mapRow(ResultSet rs) throws SQLException {
-        int id = rs.getInt("MemberID");
-        String name = rs.getString("Name");
-        String address = rs.getString("Address");
-        String phone = rs.getString("Phone");
+        int id = rs.getInt("id");
+        String name = rs.getString("name");
+        String address = rs.getString("address");
+        String phone = rs.getString("phone");
         return new Member(id, name, address, phone);
     }
 }

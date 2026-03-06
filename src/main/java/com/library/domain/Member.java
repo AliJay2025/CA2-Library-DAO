@@ -6,14 +6,17 @@ public class Member {
     private String address;
     private String phone;
 
+    // Default constructor (required for Jackson)
+    public Member() {}
+
     public Member(int id, String name, String address, String phone) {
         if (id < 0)
             throw new IllegalArgumentException("id must be >= 0");
-        if (name == null || name.isEmpty())
+        if (name == null || name.trim().isEmpty())
             throw new IllegalArgumentException("name is required");
-        if (address == null || address.isEmpty())
+        if (address == null || address.trim().isEmpty())
             throw new IllegalArgumentException("address is required");
-        if (phone == null || phone.isEmpty())
+        if (phone == null || phone.trim().isEmpty())
             throw new IllegalArgumentException("phone is required");
 
         this.id = id;
@@ -26,10 +29,35 @@ public class Member {
         this(0, name, address, phone);
     }
 
+    // Getters
     public int getId() { return id; }
     public String getName() { return name; }
     public String getAddress() { return address; }
     public String getPhone() { return phone; }
+
+    // Setters (required for Jackson deserialization)
+    public void setId(int id) {
+        if (id < 0) throw new IllegalArgumentException("id must be >= 0");
+        this.id = id;
+    }
+
+    public void setName(String name) {
+        if (name == null || name.trim().isEmpty())
+            throw new IllegalArgumentException("name is required");
+        this.name = name.trim();
+    }
+
+    public void setAddress(String address) {
+        if (address == null || address.trim().isEmpty())
+            throw new IllegalArgumentException("address is required");
+        this.address = address.trim();
+    }
+
+    public void setPhone(String phone) {
+        if (phone == null || phone.trim().isEmpty())
+            throw new IllegalArgumentException("phone is required");
+        this.phone = phone.trim();
+    }
 
     @Override
     public String toString() {
