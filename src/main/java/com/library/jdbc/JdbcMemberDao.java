@@ -8,6 +8,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class JdbcMemberDao implements MemberDao {
 
@@ -80,27 +81,36 @@ public class JdbcMemberDao implements MemberDao {
     }
 
     @Override
-    public boolean update(int id, String name, String address, String phone) throws Exception {
-        if (id <= 0)
-            return false;
-        if (name == null || name.trim().isEmpty())
-            throw new IllegalArgumentException("name is required");
-        if (address == null || address.trim().isEmpty())
-            throw new IllegalArgumentException("address is required");
-        if (phone == null || phone.trim().isEmpty())
-            throw new IllegalArgumentException("phone is required");
+    public Member update(int id, Member member) throws Exception {
+        if (id <= 0 || member == null)
+            return null;
 
         String sql = "UPDATE member SET name = ?, address = ?, phone = ? WHERE id = ?";
 
         try (Connection c = DatabaseConnection.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
 
-            ps.setString(1, name.trim());
-            ps.setString(2, address.trim());
-            ps.setString(3, phone.trim());
+            ps.setString(1, member.getName());
+            ps.setString(2, member.getAddress());
+            ps.setString(3, member.getPhone());
             ps.setInt(4, id);
 
-            return ps.executeUpdate() == 1;
+            int rows = ps.executeUpdate();
+            if (rows == 1) {
+                // Need to set the ID on the member object
+                // You'll need to add setId method to Member class
+                try {
+                    // Use reflection or add setId method to Member class
+                    java.lang.reflect.Field idField = member.getClass().getDeclaredField("id");
+                    idField.setAccessible(true);
+                    idField.set(member, id);
+                } catch (Exception e) {
+                    // If reflection fails, create a new Member with the ID
+                    return new Member(id, member.getName(), member.getAddress(), member.getPhone());
+                }
+                return member;
+            }
+            return null;
         }
     }
 
@@ -117,6 +127,13 @@ public class JdbcMemberDao implements MemberDao {
             ps.setInt(1, id);
             return ps.executeUpdate() == 1;
         }
+    }
+
+    @Override
+    public List<Member> findByFilter(java.util.function.Predicate<Member> filter) throws Exception {
+        return findAll().stream()
+                .filter(filter)
+                .collect(Collectors.toList());
     }
 
     private Member mapRow(ResultSet rs) throws SQLException {
