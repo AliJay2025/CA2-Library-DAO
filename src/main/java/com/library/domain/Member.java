@@ -25,10 +25,13 @@ public class Member {
         this.phone = phone.trim();
     }
 
+    //<editor-fold desc="Constructor">
     public Member(String name, String address, String phone) {
         this(0, name, address, phone);
     }
+    //</editor-fold>
 
+    //<editor-fold desc="Getter and Setters">
     // Getters
     public int getId() { return id; }
     public String getName() { return name; }
@@ -58,6 +61,7 @@ public class Member {
             throw new IllegalArgumentException("phone is required");
         this.phone = phone.trim();
     }
+    //</editor-fold>
 
     @Override
     public String toString() {
