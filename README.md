@@ -1,12 +1,12 @@
 # 📚 Library Management System - Stage 1
 
 ## 👥 Group Members
-- **Abdihafid Gahayr** (Student ID: D00283863)
-- **Ali Jabril** (Student ID: D00283862)
+- **Abdihafid Gahayr** (D00283863)
+- **Ali Jabril** (D00283862)
 
 ---
 
-## 🏗️ Architecture Diagram
+## 🏗️ How Our System is Built (Architecture)
 
 ```mermaid
 graph TD
@@ -24,148 +24,91 @@ graph TD
     style JSON fill:#fff0e0,stroke:#bf360c,stroke-width:2px
 ```
 
-### 📊 Diagram Explanation
-- **Client Layer**: Console-based user interface where users interact
-- **Service Layer**: Contains business logic and rules
-- **DAO Interface**: Contract for database operations
-- **JDBC Implementation**: Actual SQL code using PreparedStatement
-- **Database**: MySQL database with 5 tables
-- **JSON Protocol**: Converts Java objects to/from JSON format
+### 📖 What Each Part Does (Simple Explanation)
+
+| Part | What It Does | Where to Find It |
+|------|--------------|------------------|
+| **Client Layer** | The menu you see when you run the program. You type numbers (1-7) to choose what you want to do. | `Main.java` (lines 25-42) |
+| **Service Layer** | The brain of the system. It decides what should happen when you pick an option. | `Main.java` methods like `GetAllMembers()`, `InsertMember()` |
+| **DAO Interface** | A list that says what operations are possible (like findAll, findById, etc.). | `MemberDao.java` |
+| **JDBC Implementation** | The actual code that operates to the database. It runs SQL queries using PreparedStatement. | `JdbcMemberDao.java` |
+| **Database** | Where all the data is stored (MySQL). Has tables like `member`, `book`, etc. | `library_database` in phpMyAdmin |
+| **JSON Protocol** | Converts Java objects into JSON format (and back). Used for data exchange. | `JsonUtil.java` |
 
 ---
 
-## ✅ Features Completed (F1-F9)
+## 🎯 How Data Flows Through the System
 
-| Feature | Description | Status |
-|---------|-------------|--------|
-| **F1** | Entity & Database Setup | ✅ 5 DTOs, 10+ seed rows |
-| **F2** | DAO Interface & JDBC Implementation | ✅ Interfaces + Implementations |
-| **F3** | Get All Entities | ✅ `findAll()` returns List |
-| **F4** | Get by ID | ✅ Returns `Optional`, never null |
-| **F5** | Delete by ID | ✅ Returns boolean |
-| **F6** | Insert Entity | ✅ Auto-generated ID via `getGeneratedKeys()` |
-| **F7** | Update Entity | ✅ Returns updated DTO |
-| **F8** | Filter with Predicate | ✅ Lambda filtering |
-| **F9** | JSON Conversion | ✅ Round-trip verified |
+When you choose an option from the menu, here's what happens:
+
+1. **You pick option 1** (Get All Members)
+2. **The Service Layer** calls `memberDao.findAll()`
+3. **The DAO Interface** passes the request to `JdbcMemberDao`
+4. **JDBC Implementation** runs: `SELECT * FROM member`
+5. **Database** sends back the data
+6. **The data goes back up** the chain to your screen
+
+When you use JSON (option 6):
+- Java objects → JSON (to send data out)
+- JSON → Java objects (to read data in)
+
+---
+
+## ✅ Features You Can Test in the Menu
+
+| Menu Option | Feature | What It Does |
+|-------------|---------|--------------|
+| **1** | F3: Get All Members | Shows every member in the database |
+| **2** | F4: Get Member by ID | Finds one member using their ID |
+| **3** | F6: Insert Member | Adds a new member (ID is auto-generated) |
+| **4** | F7: Update Member | Changes a member's details |
+| **5** | F8: Filter with Predicate | Finds members that match a rule (e.g., name starts with 'A') |
+| **6** | F9: JSON Conversion | Converts members to/from JSON |
+| **7** | F5: Delete Member | Removes a member from the database |
+| **0** | Exit | Closes the program |
 
 ---
 
 ## 🗄️ Database Tables
 
-| Table | Description |
-|-------|-------------|
-| **member** | Library members (id, name, address, phone) |
-| **book** | Books in library (id, title, author, category_id, shelf_id, available_copies) |
-| **category** | Book categories (id, name) |
-| **shelf** | Physical shelf locations (id, shelf_number, location) |
-| **staff** | Library employees (id, name, role, contact) |
+| Table | What It Stores |
+|-------|----------------|
+| **member** | People who borrow books (id, name, address, phone) |
+| **book** | Books in the library (id, title, author, etc.) |
+| **category** | Types of books (Fiction, Science, etc.) |
+| **shelf** | Where books are located in the library |
+| **staff** | People who work at the library |
 
 ---
 
-## 🛠️ How to Run
+## 🛠️ How to Run the Program
 
-### Prerequisites
-- XAMPP (MySQL) installed and running
-- IntelliJ IDEA
-- Java 8
-
-### Steps to Run
-
-1. **Start MySQL** in XAMPP Control Panel
-
-2. **Create Database** 
-   - Open phpMyAdmin: http://localhost/phpmyadmin
-   - Import `sql/create_db.sql`
-
-3. **Open Project** in IntelliJ
-
-4. **Run Main Class**
-   - Navigate to `com.library.Main`
-   - Click the green triangle ▶️ to run
+1. **Start XAMPP** and make sure MySQL is running
+2. **Import the database**: Open phpMyAdmin and run `sql/create_db.sql`
+3. **Run the program**: In IntelliJ, click the green triangle on `Main.java`
+4. **Follow the menu**: Type numbers 1-7 to test each feature
 
 ---
 
-## 📁 Project Structure
+## 📁 Project Files
 
 ```
 src/main/java/com/library/
-├── Main.java                    # Demo application
-├── dao/                         # DAO Interfaces
-│   ├── MemberDao.java
-│   ├── BookDao.java
-│   ├── CategoryDao.java
-│   ├── ShelfDao.java
-│   └── StaffDao.java
-├── jdbc/                        # JDBC Implementations
-│   ├── JdbcMemberDao.java
-│   ├── JdbcBookDao.java
-│   ├── JdbcCategoryDao.java
-│   ├── JdbcShelfDao.java
-│   └── JdbcStaffDao.java
-├── domain/                      # DTO Classes
-│   ├── Member.java
-│   ├── Book.java
-│   ├── Category.java
-│   ├── Shelf.java
-│   └── Staff.java
-├── db/                          # Database Connection
+├── Main.java              # The menu program you run
+├── dao/                   # Interfaces (to-do lists)
+│   └── MemberDao.java
+├── jdbc/                   # Actual database code
+│   └── JdbcMemberDao.java
+├── domain/                 # Data objects
+│   └── Member.java
+├── db/                     # Database connection
 │   └── DatabaseConnection.java
-└── json/                        # JSON Conversion
+└── json/                   # JSON converter
     └── JsonUtil.java
 ```
-
----
-
-## 🔧 Technologies Used
-
-- **Java 8** - Core language
-- **MySQL** - Database
-- **JDBC** - Database connectivity
-- **Maven** - Dependency management
-- **Jackson** - JSON processing
-- **JUnit** - Testing
-
----
-
-## 📸 Expected Output
-
-When you run `Main.java`, you should see:
-
-```
------------------------------------------------
-  DAO Layer and Full CRUD - STAGE 1
-------------------------------------------------
-
---- F3: GET ALL MEMBERS ---
-   Total members found: 10
-   - Member{id=1, name='Ali Abdi', phone='087-123-4567'}
-   ...
-
---- F4: GET MEMBER BY ID ---
-   Found member with ID 1: Member{id=1, name='Ali Abdi', phone='087-123-4567'}
-
---- F6: INSERT MEMBER ---
-   After insert - ID: 11 (auto-generated) ✓
-
---- F7: UPDATE MEMBER ---
-   Update result: SUCCESS ✓
-
---- F8: FILTER WITH PREDICATE ---
-   Members with names starting with 'A': 2
-
---- F9: JSON CONVERSION ---
-   Member to JSON: {"id":1,"name":"Ali Abdi","address":"123 Main St, Dublin","phone":"087-123-4567"}
-
---- F5: DELETE MEMBER ---
-   Delete result: SUCCESS ✓
-```
-
----
 
 ## 🔗 GitHub Repository
 [https://github.com/AliJay2025/CA2-Library-DAO](https://github.com/AliJay2025/CA2-Library-DAO)
 
 ---
 
-## 📅 Deadline
-Sunday 8th March - Stage 1 Complete ✅
