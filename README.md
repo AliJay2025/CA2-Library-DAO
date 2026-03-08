@@ -10,7 +10,7 @@
 
 ```mermaid
 graph TD
-    Client["📋 Client Layer<br/>Console Menu"] --> Service["⚙️ Service Layer<br/>Business Logic"]
+    Client["📋 Client <br/> Menu Screen"] --> Service["⚙️ Service <br/>Decides What To Do"]
     Service --> DAO["📄 DAO Interface<br/>MemberDao"]
     DAO --> JDBC["🔌 JDBC Implementation<br/>JdbcMemberDao"]
     JDBC --> DB["💾 MySQL Database<br/>library_database"]
