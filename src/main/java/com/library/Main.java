@@ -16,7 +16,7 @@ public class Main {
 
     public static void main(String[] args) {
         // Test database connection first
-        System.out.println("Testing database connection.....");
+        System.out.println("Testing database connection......");
         try {
             java.sql.Connection conn = com.library.db.DatabaseConnection.getConnection();
             System.out.println("Connected to database: " + conn.getCatalog());
