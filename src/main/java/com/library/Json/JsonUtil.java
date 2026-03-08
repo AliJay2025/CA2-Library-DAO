@@ -12,7 +12,7 @@ import java.util.List;
 public class JsonUtil {
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
-    // ========== MEMBER JSON METHODS ==========
+    // ---------- MEMBER JSON METHODS ------------
     public static String memberToJson(Member member) throws Exception {
         return MAPPER.writeValueAsString(member);
     }
