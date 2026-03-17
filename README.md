@@ -9,7 +9,7 @@
 ## 🏗️ System Architecture
 
 ```mermaid
-flowchart LR
+graph TD
   UI["📋 Presentation Layer<br/>Menu Screen (Main.java)"] --> S["⚙️ Service Layer<br/>Business Rules & Logic"]
   S --> D["📄 Data Access Layer<br/>DAO Interfaces + JDBC Implementations"]
   D --> DB["💾 MySQL Database<br/>library_database (5 tables)"]
