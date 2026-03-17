@@ -23,16 +23,15 @@ graph TD
   style JSON fill:#fff0e0,stroke:#bf360c,stroke-width:2px
 ```
 
-### 📖 What Each Part Does (Simple Explanation)
+### 📖 What Each Layer Does
 
-| Part | What It Does | Where to Find It |
-|------|--------------|------------------|
-| **Client Layer** | The menu you see when you run the program. You type numbers (1-7) to choose what you want to do. | `Main.java` (lines 25-42) |
-| **Service Layer** | The brain of the system. It decides what should happen when you pick an option. | `Main.java` methods like `GetAllMembers()`, `InsertMember()` |
-| **DAO Interface** | A list that says what operations are possible (like findAll, findById, etc.). | `MemberDao.java` |
-| **JDBC Implementation** | The actual code that operates to the database. It runs SQL queries using PreparedStatement. | `JdbcMemberDao.java` |
-| **Database** | Where all the data is stored (MySQL). Has tables like `member`, `book`, etc. | `library_database` in phpMyAdmin |
-| **JSON Protocol** | Converts Java objects into JSON format (and back). Used for data exchange. | `JsonUtil.java` |
+| Layer | What It Contains | Simple Explanation |
+|-------|------------------|-------------------|
+| **Presentation Layer** | `Main.java` | The menu you see when you run the program. You type numbers 1-7. |
+| **Service Layer** | Methods in `Main.java` | The brain - decides what happens when you pick an option. |
+| **Data Access Layer** | `dao/` + `jdbc/` folders | 5 DAO interfaces + 5 JDBC implementations that talk to the database. |
+| **Database** | `library_database` | MySQL with 5 tables: member, book, category, shelf, staff. |
+| **JSON Protocol** | `JsonUtil.java` | Converts Java objects to/from JSON format. |
 
 ---
 
