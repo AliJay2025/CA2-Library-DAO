@@ -6,22 +6,21 @@
 
 ---
 
-## 🏗️ How Our System is Built (Architecture)
+## 🏗️ System Architecture
 
 ```mermaid
-graph TD
-    Client["📋 Client <br/> Menu Screen"] --> Service["⚙️ Service <br/>Decides What To Do"]
-    Service --> DAO["📄 DAO Interface<br/>MemberDao"]
-    DAO --> JDBC["🔌 JDBC Implementation<br/>JdbcMemberDao"]
-    JDBC --> DB["💾 MySQL Database<br/>library_database"]
-    Service <--> JSON["🔄 JSON Protocol<br/>JsonUtil"]
+flowchart LR
+  UI["📋 Presentation Layer<br/>Menu Screen (Main.java)"] --> S["⚙️ Service Layer<br/>Business Rules & Logic"]
+  S --> D["📄 Data Access Layer<br/>DAO Interfaces + JDBC Implementations"]
+  D --> DB["💾 MySQL Database<br/>library_database (5 tables)"]
+  
+  S <--> JSON["🔄 JSON Protocol<br/>JsonUtil"]
 
-    style Client fill:#e1f5fe,stroke:#01579b,stroke-width:2px
-    style Service fill:#fff3e0,stroke:#e65100,stroke-width:2px
-    style DAO fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
-    style JDBC fill:#ffe0e0,stroke:#b71c1c,stroke-width:2px
-    style DB fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
-    style JSON fill:#fff0e0,stroke:#bf360c,stroke-width:2px
+  style UI fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+  style S fill:#fff3e0,stroke:#e65100,stroke-width:2px
+  style D fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
+  style DB fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+  style JSON fill:#fff0e0,stroke:#bf360c,stroke-width:2px
 ```
 
 ### 📖 What Each Part Does (Simple Explanation)
