@@ -3,7 +3,7 @@ package com.library.model;
 public class ServerResponse<T> {
     private String status;   // "success" or "error"
     private String message;  // Human-readable message
-    private T data;          // The actual data (Member, List<Member>, etc.)
+    private T data;          // The actual data (Member, List<Member>.)
 
     // Default constructor (required for JSON deserialization)
     public ServerResponse() {}
