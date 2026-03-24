@@ -1,4 +1,4 @@
-# 📚 Library Management System - Stage 1
+# 📚 Library Management System - Stage 1 & 2
 
 ## 👥 Group Members
 - **Abdihafid Gahayr** (D00283863)
@@ -35,24 +35,7 @@ graph TD
 
 ---
 
-## 🎯 How Data Flows Through the System
-
-When you choose an option from the menu, here's what happens:
-
-1. **You pick option 1** (Get All Members)
-2. **The Service Layer** calls `memberDao.findAll()`
-3. **The DAO Interface** passes the request to `JdbcMemberDao`
-4. **JDBC Implementation** runs: `SELECT * FROM member`
-5. **Database** sends back the data
-6. **The data goes back up** the chain to your screen
-
-When you use JSON (option 6):
-- Java objects → JSON (to send data out)
-- JSON → Java objects (to read data in)
-
----
-
-## ✅ Features You Can Test in the Menu
+## ✅ Stage 1 Features (F1-F9)
 
 | Menu Option | Feature | What It Does |
 |-------------|---------|--------------|
@@ -79,7 +62,7 @@ When you use JSON (option 6):
 
 ---
 
-## 🛠️ How to Run the Program
+## 🛠️ How to Run Stage 1
 
 1. **Start XAMPP** and make sure MySQL is running
 2. **Import the database**: Open phpMyAdmin and run `sql/create_db.sql`
@@ -88,25 +71,266 @@ When you use JSON (option 6):
 
 ---
 
-## 📁 Project Files
+## 📁 Project Structure
 
 ```
 src/main/java/com/library/
-├── Main.java              # The menu program you run
-├── dao/                   # Interfaces (to-do lists)
-│   └── MemberDao.java
-├── jdbc/                   # Actual database code
-│   └── JdbcMemberDao.java
-├── domain/                 # Data objects
-│   └── Member.java
-├── db/                     # Database connection
+├── Main.java              # Stage 1 menu program
+├── dao/                   # DAO Interfaces
+│   ├── MemberDao.java
+│   ├── BookDao.java
+│   ├── CategoryDao.java
+│   ├── ShelfDao.java
+│   └── StaffDao.java
+├── jdbc/                  # JDBC Implementations
+│   ├── JdbcMemberDao.java
+│   ├── JdbcBookDao.java
+│   ├── JdbcCategoryDao.java
+│   ├── JdbcShelfDao.java
+│   └── JdbcStaffDao.java
+├── domain/                # Entity Classes
+│   ├── Member.java
+│   ├── Book.java
+│   ├── Category.java
+│   ├── Shelf.java
+│   └── Staff.java
+├── db/                    # Database Connection
 │   └── DatabaseConnection.java
-└── json/                   # JSON converter
-    └── JsonUtil.java
+├── json/                  # JSON Conversion
+│   └── JsonUtil.java
+├── server/                # Stage 2 Server
+│   └── LibraryServer.java
+├── client/                # Stage 2 Client
+│   └── LibraryClient.java
+└── model/                 # Stage 2 Response Wrapper
+    └── ServerResponse.java
 ```
-
-## 🔗 GitHub Repository
-[https://github.com/AliJay2025/CA2-Library-DAO](https://github.com/AliJay2025/CA2-Library-DAO)
 
 ---
 
+# 📡 Stage 2: Client-Server Integration
+
+## 🚀 Features (F10-F16)
+
+| Feature | Description | Status |
+|---------|-------------|--------|
+| **F10** | Multithreaded Server | ✅ ExecutorService handles multiple clients |
+| **F11** | ServerResponse Wrapper | ✅ Generic wrapper with status, message, data |
+| **F12** | Get All & Get by ID | ✅ Client can retrieve members |
+| **F13** | Insert Entity | ✅ Client can add new members |
+| **F14** | Delete Entity | ✅ Client can delete members |
+| **F15** | Update Entity | ✅ Client can update members |
+| **F16** | Error Handling & Protocol | ✅ Structured errors + documentation |
+
+---
+
+## 📡 Client-Server Protocol
+
+### Communication Overview
+
+The client and server communicate using JSON messages over TCP sockets.  
+All requests follow a standard format, and all responses use the `ServerResponse<T>` wrapper.
+
+---
+
+### 📨 Request Format
+
+```json
+{
+  "requestType": "REQUEST_TYPE",
+  "id": 1,
+  "data": { ... }
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `requestType` | String | The operation to perform |
+| `id` | Integer | Used for get/delete by ID |
+| `data` | Object | Used for insert/update operations |
+
+---
+
+### 📬 Response Format
+
+```json
+{
+  "status": "success",
+  "message": "Operation completed",
+  "data": { ... }
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `status` | String | `"success"` or `"error"` |
+| `message` | String | Human-readable message |
+| `data` | Object | The result data (Member, List, or null) |
+
+---
+
+### 📋 Request Types
+
+| Request Type | Payload | Response Data |
+|--------------|---------|---------------|
+| **GET_ALL_MEMBERS** | `null` | `List<Member>` |
+| **GET_MEMBER_BY_ID** | `{"id": 1}` | `Member` |
+| **INSERT_MEMBER** | `{"data": {"name": "...", "address": "...", "phone": "..."}}` | `Member` (with auto-generated ID) |
+| **UPDATE_MEMBER** | `{"data": {"id": 1, "name": "...", "address": "...", "phone": "..."}}` | `Member` (updated) |
+| **DELETE_MEMBER** | `{"id": 1}` | `null` |
+
+---
+
+### 📤 Example Request & Response
+
+#### Example 1: Get All Members
+
+**Request:**
+```json
+{
+  "requestType": "GET_ALL_MEMBERS"
+}
+```
+
+**Response:**
+```json
+{
+  "status": "success",
+  "message": "Found 10 members",
+  "data": [
+    {"id": 1, "name": "Ali Abdi", "address": "123 Main St, Dublin", "phone": "087-123-4567"},
+    {"id": 2, "name": "Mary Johnson", "address": "45 Oak Avenue, Dundalk", "phone": "086-234-5678"}
+  ]
+}
+```
+
+#### Example 2: Get Member by ID
+
+**Request:**
+```json
+{
+  "requestType": "GET_MEMBER_BY_ID",
+  "id": 1
+}
+```
+
+**Response:**
+```json
+{
+  "status": "success",
+  "message": "Member found",
+  "data": {"id": 1, "name": "Ali Abdi", "address": "123 Main St, Dublin", "phone": "087-123-4567"}
+}
+```
+
+#### Example 3: Insert Member
+
+**Request:**
+```json
+{
+  "requestType": "INSERT_MEMBER",
+  "data": {
+    "name": "John Doe",
+    "address": "456 New St, Cork",
+    "phone": "085-123-4567"
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "status": "success",
+  "message": "Member inserted with ID 25",
+  "data": {"id": 25, "name": "John Doe", "address": "456 New St, Cork", "phone": "085-123-4567"}
+}
+```
+
+#### Example 4: Update Member
+
+**Request:**
+```json
+{
+  "requestType": "UPDATE_MEMBER",
+  "data": {
+    "id": 25,
+    "name": "John Updated",
+    "address": "789 Updated St",
+    "phone": "085-999-8888"
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "status": "success",
+  "message": "Member updated",
+  "data": {"id": 25, "name": "John Updated", "address": "789 Updated St", "phone": "085-999-8888"}
+}
+```
+
+#### Example 5: Delete Member
+
+**Request:**
+```json
+{
+  "requestType": "DELETE_MEMBER",
+  "id": 25
+}
+```
+
+**Response:**
+```json
+{
+  "status": "success",
+  "message": "Member deleted successfully",
+  "data": null
+}
+```
+
+---
+
+### ❌ Error Response
+
+When something goes wrong, the server returns an error response:
+
+```json
+{
+  "status": "error",
+  "message": "Member with ID 999 not found",
+  "data": null
+}
+```
+
+## 🛠️ How to Run Stage 2
+
+1. **Start the Server first**  
+   Run `LibraryServer.java` in IntelliJ.  
+   You should see: `Server is running. Waiting for clients...`
+
+2. **Start the Client(s)**  
+   Run `LibraryClient.java` in a separate terminal/window.  
+   You can run multiple clients simultaneously.
+
+3. **Use the Menu**  
+   Choose options 1-5 to test each CRUD operation:
+   - 1: Get All Members
+   - 2: Get Member by ID
+   - 3: Insert New Member
+   - 4: Update Member
+   - 5: Delete Member
+
+4. **Multiple Clients**  
+   The server handles multiple clients at the same time using an `ExecutorService` thread pool.
+
+---
+
+## 🔗 GitHub Repository
+[https://github.com/AliJay2025/CA2-Library-DAO]
+
+---
+
+## 📅 Deadline
+- Stage 1: Sunday 8th March ✅
+- Stage 2: Wednesday 25th March 🚀
