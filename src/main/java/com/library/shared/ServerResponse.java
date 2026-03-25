@@ -8,7 +8,7 @@ public class ServerResponse<T>
 
     public ServerResponse(String status, String message, T data)
     {
-        // FIXED: isBlank() not available in Java 8, use trim().isEmpty()
+
         if (status == null || status.trim().isEmpty())
             throw new IllegalArgumentException("status is required");
 

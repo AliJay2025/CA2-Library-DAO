@@ -12,7 +12,6 @@ import java.util.concurrent.Executors;
 /**
  * Starts the JSON protocol server and listens for incoming TCP client connections.
  * Each client is handed to a {@link ClientHandler} using an {@link ExecutorService}.
- *
  * F10: Uses ExecutorService for multithreading
  * F11: All responses use ServerResponse<T> wrapper
  */
@@ -71,9 +70,6 @@ public class LibraryServer
 
     /**
      * Entry point for launching the server.
-     *
-     * @param args Command-line arguments.
-     * @throws Exception If startup fails.
      */
     public static void main(String[] args) throws Exception
     {

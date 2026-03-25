@@ -240,7 +240,7 @@ public class LibraryClient
             String status = root.get("status").asText();
             String message = root.get("message").asText();
 
-            System.out.println("\n📋 Server Response:");
+            System.out.println("\n Server Response:");
             System.out.println("   Status: " + status);
             System.out.println("   Message: " + message);
 
@@ -251,7 +251,7 @@ public class LibraryClient
                 // Case 1: Data is an array (GET_ALL)
                 if (data.isArray())
                 {
-                    System.out.println("   📊 Data: " + data.size() + " member(s) found");
+                    System.out.println("    Data: " + data.size() + " member(s) found");
                     for (JsonNode member : data)
                     {
                         System.out.println("      - ID: " + member.get("id").asInt() +
@@ -262,19 +262,19 @@ public class LibraryClient
                 // Case 2: Data is a single object (GET_BY_ID, INSERT, UPDATE)
                 else if (data.isObject())
                 {
-                    System.out.println("   👤 Data: Member{id=" + data.get("id").asInt() +
+                    System.out.println("    Data: Member{id=" + data.get("id").asInt() +
                             ", name='" + data.get("name").asText() +
                             "', phone='" + data.get("phone").asText() + "'}");
                 }
             }
             else if ("success".equals(status) && (!root.has("data") || root.get("data").isNull()))
             {
-                System.out.println("   ✅ Data: null (operation completed)");
+                System.out.println("    Data: null (operation completed)");
             }
         }
         catch (Exception e)
         {
-            System.out.println("❌ Error parsing response: " + e.getMessage());
+            System.out.println(" Error parsing response: " + e.getMessage());
         }
     }
 }

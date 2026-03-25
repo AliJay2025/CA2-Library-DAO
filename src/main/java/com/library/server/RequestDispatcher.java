@@ -75,7 +75,7 @@ public class RequestDispatcher
             return ServerResponse.error("valid id is required");
 
         Optional<Member> member = _dao.findById(id);
-        // FIXED: Java 8 uses !isPresent() instead of isEmpty()
+
         if (!member.isPresent())
             return ServerResponse.error("no member with id=" + id);
 
@@ -100,7 +100,7 @@ public class RequestDispatcher
         int newId = _dao.insert(name, address, phone);
         Optional<Member> created = _dao.findById(newId);
 
-        // FIXED: Java 8 uses !isPresent() instead of isEmpty()
+
         if (!created.isPresent())
             return ServerResponse.error("insert succeeded but member not found");
 
@@ -127,7 +127,6 @@ public class RequestDispatcher
             return ServerResponse.error("phone is required");
 
         Optional<Member> existing = _dao.findById(id);
-        // FIXED: Java 8 uses !isPresent() instead of isEmpty()
         if (!existing.isPresent())
             return ServerResponse.error("no member with id=" + id);
 
