@@ -217,11 +217,11 @@ public class LibraryClient
     {
         String json = mapper.writeValueAsString(request);
 
-        System.out.println("\n📤 Sent: " + json);
+        System.out.println("\n Sent: " + json);
         out.println(json);
 
         String response = in.readLine();
-        System.out.println("📥 Received: " + response);
+        System.out.println(" Received: " + response);
 
         return response;
     }
