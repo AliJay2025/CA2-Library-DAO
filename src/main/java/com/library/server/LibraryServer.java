@@ -1,11 +1,7 @@
 package com.library.server;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.library.dao.MemberDao;
 import com.library.jdbc.JdbcMemberDao;
-import com.library.model.ServerResponse;
-import com.library.shared.ClientRequest;
-import com.library.shared.RequestType;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -58,7 +54,7 @@ public class LibraryServer
     {
         System.out.println("  LIBRARY SERVER - STAGE 2");
         System.out.println("----------------------------------------");
-        System.out.println("Server listening on port " + _port);
+        System.out.println("Server connected on port " + _port);
 
         try (ServerSocket serverSocket = new ServerSocket(_port))
         {
