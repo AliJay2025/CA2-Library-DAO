@@ -11,26 +11,12 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 
-/**
- * Handles one connected client.
- * It reads one JSON request per line, dispatches it, and writes back one JSON response per line.
- *
- * Each ClientHandler runs in its own thread (F10)
- */
 public class ClientHandler implements Runnable
 {
-    // === Fields ===
     private final Socket _socket;
     private final ObjectMapper _mapper;
     private final RequestDispatcher _dispatcher;
 
-    // === Constructors ===
-    /**
-     * Creates a handler for the supplied client socket.
-     *
-     * @param socket The client socket.
-     * @param dao The DAO used by the request dispatcher.
-     */
     public ClientHandler(Socket socket, MemberDao dao)
     {
         if (socket == null)
@@ -44,10 +30,6 @@ public class ClientHandler implements Runnable
         _dispatcher = new RequestDispatcher(dao);
     }
 
-    // === Methods ===
-    /**
-     * Runs the client session until the client disconnects or the stream ends.
-     */
     @Override
     public void run()
     {
@@ -70,23 +52,10 @@ public class ClientHandler implements Runnable
         }
         finally
         {
-            try
-            {
-                _socket.close();
-            }
-            catch (IOException ignored)
-            {
-            }
+            try { _socket.close(); } catch (IOException ignored) {}
         }
     }
 
-    /**
-     * Converts a raw JSON request into a {@link ClientRequest},
-     * dispatches it, and converts the response back into JSON.
-     *
-     * @param rawJson The raw request line.
-     * @return A JSON response line.
-     */
     private String handle(String rawJson)
     {
         try
@@ -101,12 +70,6 @@ public class ClientHandler implements Runnable
         }
     }
 
-    /**
-     * Builds a fallback JSON error response when normal serialization cannot be used.
-     *
-     * @param message The error message.
-     * @return A raw JSON error response string.
-     */
     private String toErrorJson(String message)
     {
         String safeMessage = message == null ? "unknown error" : message.replace("\"", "\\\"");

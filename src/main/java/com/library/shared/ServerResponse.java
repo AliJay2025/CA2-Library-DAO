@@ -1,10 +1,5 @@
 package com.library.shared;
 
-/**
- * Represents a standard JSON response sent from the server to a client.
- *
- * @param <T> The type of the response data payload.
- */
 public class ServerResponse<T>
 {
     // === Fields ===
@@ -13,13 +8,6 @@ public class ServerResponse<T>
     private T _data;
 
     // === Constructors ===
-    /**
-     * Creates a response with a status, message, and data payload.
-     *
-     * @param status Typically "OK" or "ERROR".
-     * @param message Human-readable response message.
-     * @param data Optional payload data.
-     */
     public ServerResponse(String status, String message, T data)
     {
         if (status == null || status.isBlank())
@@ -31,69 +19,24 @@ public class ServerResponse<T>
     }
 
     // === Properties ===
-    /**
-     * Gets the response status.
-     *
-     * @return The response status string.
-     */
-    public String getStatus()
-    {
-        return _status;
-    }
-
-    /**
-     * Gets the response message.
-     *
-     * @return The message explaining the result.
-     */
-    public String getMessage()
-    {
-        return _message;
-    }
-
-    /**
-     * Gets the response payload data.
-     *
-     * @return The payload data, or null.
-     */
-    public T getData()
-    {
-        return _data;
-    }
+    public String getStatus() { return _status; }
+    public String getMessage() { return _message; }
+    public T getData() { return _data; }
 
     // === Methods ===
-    /**
-     * Creates a successful response.
-     *
-     * @param message Success message.
-     * @param data Optional payload.
-     * @param <T> Payload type.
-     * @return An OK response.
-     */
-    public static <T> ServerResponse<T> ok(String message, T data)
+    // CHANGE: Use "success" instead of "OK" to match client
+    public static <T> ServerResponse<T> success(String message, T data)
     {
-        return new ServerResponse<>("OK", message, data);
+        return new ServerResponse<>("success", message, data);
     }
 
-    /**
-     * Creates an error response.
-     *
-     * @param message Error message.
-     * @param <T> Payload type.
-     * @return An ERROR response.
-     */
     public static <T> ServerResponse<T> error(String message)
     {
-        return new ServerResponse<>("ERROR", message, null);
+        return new ServerResponse<>("error", message, null);
     }
 
-    /**
-     * Indicates whether the response represents success.
-     *
-     * @return True when the status is OK.
-     */
-    public boolean isOk()
+    public boolean isSuccess()
     {
-        return "OK".equals(_status);
+        return "success".equals(_status);
     }
 }

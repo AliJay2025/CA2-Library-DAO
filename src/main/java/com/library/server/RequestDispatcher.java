@@ -1,4 +1,45 @@
-package com.library.server;
+HafidG
+        hafidg
+        Online
+
+        JayJay — 05/12/2024 13:23
+        hye ximaaar
+        where is the code
+        💩
+        HafidG — 05/12/2024 14:44
+        Forwarded
+        the hangman i did wasnt working fully but this version does. but you cant use this one exaclty as it is because it has stuff you havent doen yet. so just use it to try and understand the logic and use it to fix yours
+        package Projects;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Random;
+import java.util.Scanner;
+
+message.txt
+        5 KB
+        HafidG — 08/03/2026 15:10
+        https://github.com/abdihafidgahayr2-glitch/AESProject
+        HafidG
+        started a call that lasted a few seconds. — 15/03/2026 13:46
+        HafidG — 15/03/2026 13:46
+        Ali
+        JayJay — Yesterday at 13:14
+        file:///C:/Users/user/Downloads/2025-26-l8-s2-oop-gca2%20(3).html
+        JayJay — 14:56
+        package com.library.server;
+
+import com.library.dao.MemberDao;
+import com.library.domain.Member;
+import com.library.shared.ClientRequest;
+import com.library.shared.RequestType;
+
+message.txt
+        6 KB
+        ﻿
+        JayJay
+        jabra_1
+        package com.library.server;
 
 import com.library.dao.MemberDao;
 import com.library.domain.Member;
@@ -9,36 +50,17 @@ import com.library.shared.ServerResponse;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Routes a deserialized {@link ClientRequest} to the correct DAO-backed operation.
- * This keeps protocol decision logic separate from socket handling.
- */
 public class RequestDispatcher
 {
-    // === Fields ===
     private final MemberDao _dao;
 
-    // === Constructors ===
-    /**
-     * Creates a dispatcher using the supplied DAO.
-     *
-     * @param dao The DAO used to perform member operations.
-     */
     public RequestDispatcher(MemberDao dao)
     {
         if (dao == null)
             throw new IllegalArgumentException("dao is required");
-
         _dao = dao;
     }
 
-    // === Methods ===
-    /**
-     * Dispatches a client request to the correct handler based on request type.
-     *
-     * @param req The client request.
-     * @return A server response describing the outcome.
-     */
     public ServerResponse<?> dispatch(ClientRequest req)
     {
         if (req == null)
@@ -87,25 +109,12 @@ public class RequestDispatcher
         }
     }
 
-    /**
-     * Handles a request to retrieve all members.
-     *
-     * @return A response containing all members.
-     * @throws Exception If the DAO operation fails.
-     */
     private ServerResponse<List<Member>> handleGetAll() throws Exception
     {
         List<Member> members = _dao.findAll();
         return ServerResponse.success("Found " + members.size() + " members", members);
     }
 
-    /**
-     * Handles a request to retrieve a member by id.
-     *
-     * @param req The client request.
-     * @return A response containing the matching member, if found.
-     * @throws Exception If the DAO operation fails.
-     */
     private ServerResponse<?> handleGetById(ClientRequest req) throws Exception
     {
         int id = req.getInt("id");
@@ -121,13 +130,6 @@ public class RequestDispatcher
         return ServerResponse.success("Member found", member.get());
     }
 
-    /**
-     * Handles a request to insert a new member.
-     *
-     * @param req The client request.
-     * @return A response containing the created member.
-     * @throws Exception If the DAO operation fails.
-     */
     private ServerResponse<?> handleInsert(ClientRequest req) throws Exception
     {
         String name = req.getString("name");
@@ -152,13 +154,6 @@ public class RequestDispatcher
         return ServerResponse.success("Member inserted with ID " + newId, created.get());
     }
 
-    /**
-     * Handles a request to update an existing member.
-     *
-     * @param req The client request.
-     * @return A response containing the updated member.
-     * @throws Exception If the DAO operation fails.
-     */
     private ServerResponse<?> handleUpdate(ClientRequest req) throws Exception
     {
         int id = req.getInt("id");
@@ -192,13 +187,6 @@ public class RequestDispatcher
         return ServerResponse.success("Member updated", result);
     }
 
-    /**
-     * Handles a request to delete a member by id.
-     *
-     * @param req The client request.
-     * @return A response indicating whether deletion succeeded.
-     * @throws Exception If the DAO operation fails.
-     */
     private ServerResponse<Void> handleDelete(ClientRequest req) throws Exception
     {
         int id = req.getInt("id");
