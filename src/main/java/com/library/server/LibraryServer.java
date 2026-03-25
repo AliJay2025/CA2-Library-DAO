@@ -1,11 +1,7 @@
 package com.library.server;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.library.dao.MemberDao;
 import com.library.jdbc.JdbcMemberDao;
-import com.library.model.ServerResponse;
-import com.library.shared.ClientRequest;
-import com.library.shared.RequestType;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -16,7 +12,6 @@ import java.util.concurrent.Executors;
 /**
  * Starts the JSON protocol server and listens for incoming TCP client connections.
  * Each client is handed to a {@link ClientHandler} using an {@link ExecutorService}.
- *
  * F10: Uses ExecutorService for multithreading
  * F11: All responses use ServerResponse<T> wrapper
  */
@@ -58,7 +53,7 @@ public class LibraryServer
     {
         System.out.println("  LIBRARY SERVER - STAGE 2");
         System.out.println("----------------------------------------");
-        System.out.println("Server listening on port " + _port);
+        System.out.println("Server connected on port " + _port);
 
         try (ServerSocket serverSocket = new ServerSocket(_port))
         {
@@ -75,9 +70,6 @@ public class LibraryServer
 
     /**
      * Entry point for launching the server.
-     *
-     * @param args Command-line arguments.
-     * @throws Exception If startup fails.
      */
     public static void main(String[] args) throws Exception
     {
