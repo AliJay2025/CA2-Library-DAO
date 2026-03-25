@@ -13,13 +13,28 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 
+/**
+ * Console client that communicates with the LibraryServer using JSON protocol.
+ * User can choose options from a menu to perform CRUD operations.
+ *
+ * F12-F15: All CRUD operations are implemented
+ * F16: Error handling is implemented
+ */
 public class LibraryClient
 {
+    // === Static Fields ===
     private static final String HOST = "localhost";
     private static final int PORT = 8080;
     private static final ObjectMapper mapper = new ObjectMapper();
     private static final Scanner scanner = new Scanner(System.in);
 
+    // === Methods ===
+    /**
+     * Entry point for the client program.
+     *
+     * @param args Command-line arguments.
+     * @throws Exception If communication fails.
+     */
     public static void main(String[] args) throws Exception
     {
         System.out.println("------------------------------------------");
@@ -77,6 +92,7 @@ public class LibraryClient
         }
     }
 
+    // === Menu Methods ===
     private static void displayMenu()
     {
         System.out.println("  LIBRARY CLIENT MENU");
@@ -93,10 +109,17 @@ public class LibraryClient
 
     private static int getUserChoice()
     {
-        try { return Integer.parseInt(scanner.nextLine()); }
-        catch (NumberFormatException e) { return -1; }
+        try
+        {
+            return Integer.parseInt(scanner.nextLine());
+        }
+        catch (NumberFormatException e)
+        {
+            return -1;
+        }
     }
 
+    // === Request Creation Methods ===
     private static ClientRequest createRequest(RequestType type, Map<String, Object> payload)
     {
         ClientRequest request = new ClientRequest();
@@ -112,6 +135,7 @@ public class LibraryClient
 
         Map<String, Object> payload = new HashMap<>();
         payload.put("id", id);
+
         return createRequest(RequestType.GET_BY_ID, payload);
     }
 
@@ -128,6 +152,7 @@ public class LibraryClient
         payload.put("name", name);
         payload.put("address", address);
         payload.put("phone", phone);
+
         return createRequest(RequestType.INSERT, payload);
     }
 
@@ -147,6 +172,7 @@ public class LibraryClient
         payload.put("name", name);
         payload.put("address", address);
         payload.put("phone", phone);
+
         return createRequest(RequestType.UPDATE, payload);
     }
 
@@ -157,26 +183,55 @@ public class LibraryClient
 
         Map<String, Object> payload = new HashMap<>();
         payload.put("id", id);
+
         return createRequest(RequestType.DELETE, payload);
     }
 
+    // === Communication Methods ===
+    /**
+     * Sends a request and prints the response.
+     *
+     * @param out Writer for socket output.
+     * @param in Reader for socket input.
+     * @param mapper Jackson mapper.
+     * @param request The request to send.
+     * @throws Exception If communication fails.
+     */
     private static void sendAndPrint(PrintWriter out, BufferedReader in, ObjectMapper mapper, ClientRequest request) throws Exception
     {
         String response = sendAndReceive(out, in, mapper, request);
         parseAndDisplayResponse(response, mapper);
     }
 
+    /**
+     * Sends a request and returns the response string.
+     *
+     * @param out Writer for socket output.
+     * @param in Reader for socket input.
+     * @param mapper Jackson mapper.
+     * @param request The request to send.
+     * @return The raw JSON response string.
+     * @throws Exception If communication fails.
+     */
     private static String sendAndReceive(PrintWriter out, BufferedReader in, ObjectMapper mapper, ClientRequest request) throws Exception
     {
         String json = mapper.writeValueAsString(request);
-        System.out.println("\n📤 Sent: " + json);
+
+        System.out.println("\n Sent: " + json);
         out.println(json);
 
         String response = in.readLine();
-        System.out.println("📥 Received: " + response);
+        System.out.println(" Received: " + response);
+
         return response;
     }
 
+    /**
+     * Parses the JSON response from the server and displays it in a user-friendly format.
+     *
+     * @param responseJson The raw JSON response.
+     * @param mapper Jackson mapper.
+     */
     private static void parseAndDisplayResponse(String responseJson, ObjectMapper mapper)
     {
         try
@@ -193,6 +248,7 @@ public class LibraryClient
             {
                 JsonNode data = root.get("data");
 
+                // Case 1: Data is an array (GET_ALL)
                 if (data.isArray())
                 {
                     System.out.println("    Data: " + data.size() + " member(s) found");
@@ -203,6 +259,7 @@ public class LibraryClient
                                 ", Phone: " + member.get("phone").asText());
                     }
                 }
+                // Case 2: Data is a single object (GET_BY_ID, INSERT, UPDATE)
                 else if (data.isObject())
                 {
                     System.out.println("    Data: Member{id=" + data.get("id").asInt() +
