@@ -1,107 +1,100 @@
 package com.library.client;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.*;
+import com.library.shared.ClientRequest;
+import com.library.shared.RequestType;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
 /**
- * LibraryClient - The client that connects to the server
+ * Console client that communicates with the LibraryServer using JSON protocol.
+ * User can choose options from a menu to perform CRUD operations.
  *
- * This client communicates with the server using JSON messages over TCP sockets.
- * It provides a menu-driven interface for users to perform CRUD operations.
- *
- * F12-F15: All CRUD operations are implemented here (Get All, Get by ID, Insert, Update, Delete)
- * F16: Error handling is implemented - exceptions are caught and displayed nicely
+ * F12-F15: All CRUD operations are implemented
+ * F16: Error handling is implemented
  */
-public class LibraryClient {
+public class LibraryClient
+{
+    // === Static Fields ===
+    private static final String HOST = "localhost";
+    private static final int PORT = 8080;
+    private static final ObjectMapper mapper = new ObjectMapper();
+    private static final Scanner scanner = new Scanner(System.in);
 
-    // Server connection details
-    private static final String SERVER_HOST = "localhost";  // Server runs on same machine
-    private static final int SERVER_PORT = 8080;            // Must match server's port
-
-    // Jackson's ObjectMapper - converts JSON to Java objects and back
-    private static ObjectMapper mapper = new ObjectMapper();
-
-    // Scanner for reading user input from console
-    private static Scanner scanner = new Scanner(System.in);
-
+    // === Methods ===
     /**
-     * Main method - connects to server and displays the menu
+     * Entry point for the client program.
+     *
+     * @param args Command-line arguments.
+     * @throws Exception If communication fails.
      */
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception
+    {
         System.out.println("------------------------------------------");
         System.out.println("  LIBRARY CLIENT - STAGE 2");
         System.out.println("------------------------------------------\n");
 
-        // try-with-resources - automatically closes the socket and streams
-        // This establishes a TCP connection to the server
-        try (Socket socket = new Socket(SERVER_HOST, SERVER_PORT);
-             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+        try (Socket socket = new Socket(HOST, PORT);
+             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+             PrintWriter out = new PrintWriter(socket.getOutputStream(), true))
+        {
+            System.out.println("Connected to server at " + HOST + ":" + PORT + "\n");
 
-            System.out.println("Connected to server at " + SERVER_HOST + ":" + SERVER_PORT + "\n");
+            while (true)
+            {
+                displayMenu();
+                int choice = getUserChoice();
 
-            // Main loop - keep showing menu until user chooses Exit
-            while (true) {
-                displayMenu();                    // Show the menu options
-                int choice = getUserChoice();     // Get user's choice (1-5 or 0)
+                ClientRequest request = null;
 
-                String request = null;            // Will hold the JSON request
-
-                // Create the appropriate request based on user's choice
-                switch (choice) {
+                switch (choice)
+                {
                     case 1:
-                        request = createGetAllRequest();      // F12: Get all members
+                        request = createRequest(RequestType.GET_ALL, null);
                         break;
                     case 2:
-                        request = createGetByIdRequest();     // F12: Get member by ID
+                        request = createGetByIdRequest();
                         break;
                     case 3:
-                        request = createInsertRequest();      // F13: Insert new member
+                        request = createInsertRequest();
                         break;
                     case 4:
-                        request = createUpdateRequest();      // F15: Update member
+                        request = createUpdateRequest();
                         break;
                     case 5:
-                        request = createDeleteRequest();      // F14: Delete member
+                        request = createDeleteRequest();
                         break;
                     case 0:
                         System.out.println("\nGoodbye!");
-                        return;                    // Exit the program
+                        return;
                     default:
                         System.out.println("\nInvalid choice. Please try again.");
-                        continue;                  // Go back to menu
+                        continue;
                 }
 
-                if (request != null) {
-                    // Send the JSON request to the server
-                    out.println(request);
-                    System.out.println("\nSent: " + request);
-
-                    // Wait for and receive the JSON response from the server
-                    String responseJson = in.readLine();
-                    System.out.println("Received: " + responseJson);
-
-                    // Parse the response and display it nicely
-                    parseAndDisplayResponse(responseJson);
+                if (request != null)
+                {
+                    sendAndPrint(out, in, mapper, request);
                 }
             }
-
-        } catch (Exception e) {
-            // Error handling - display friendly message (F16)
+        }
+        catch (Exception e)
+        {
             System.err.println("Error connecting to server: " + e.getMessage());
-            System.err.println("Make sure the server is running on port " + SERVER_PORT);
+            System.err.println("Make sure the server is running on port " + PORT);
         }
     }
 
-    /**
-     * Displays the menu options to the user
-     */
-    private static void displayMenu() {
+    // === Menu Methods ===
+    private static void displayMenu()
+    {
         System.out.println("  LIBRARY CLIENT MENU");
         System.out.println("--------------------------------");
         System.out.println("  1. Get All Members");
@@ -114,49 +107,40 @@ public class LibraryClient {
         System.out.print("Enter your choice: ");
     }
 
-    /**
-     * Reads user input and returns it as an integer
-     *
-     * @return user's choice (1-5, 0), or -1 if invalid
-     */
-    private static int getUserChoice() {
-        try {
+    private static int getUserChoice()
+    {
+        try
+        {
             return Integer.parseInt(scanner.nextLine());
-        } catch (NumberFormatException e) {
-            return -1;  // Invalid input (not a number)
+        }
+        catch (NumberFormatException e)
+        {
+            return -1;
         }
     }
 
-    /**
-     * Creates JSON request to get all members from the database
-     * Format: {"requestType": "GET_ALL_MEMBERS"}
-     */
-    private static String createGetAllRequest() throws Exception {
-        Map<String, Object> request = new HashMap<>();
-        request.put("requestType", "GET_ALL_MEMBERS");
-        return mapper.writeValueAsString(request);
+    // === Request Creation Methods ===
+    private static ClientRequest createRequest(RequestType type, Map<String, Object> payload)
+    {
+        ClientRequest request = new ClientRequest();
+        request.setRequestType(type.name());
+        request.setPayload(payload);
+        return request;
     }
 
-    /**
-     * Creates JSON request to get a member by ID
-     * Format: {"requestType": "GET_MEMBER_BY_ID", "id": 1}
-     */
-    private static String createGetByIdRequest() throws Exception {
+    private static ClientRequest createGetByIdRequest() throws Exception
+    {
         System.out.print("Enter Member ID: ");
         int id = Integer.parseInt(scanner.nextLine());
 
-        Map<String, Object> request = new HashMap<>();
-        request.put("requestType", "GET_MEMBER_BY_ID");
-        request.put("id", id);
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("id", id);
 
-        return mapper.writeValueAsString(request);
+        return createRequest(RequestType.GET_BY_ID, payload);
     }
 
-    /**
-     * Creates JSON request to insert a new member
-     * Format: {"requestType": "INSERT_MEMBER", "data": {"name": "...", "address": "...", "phone": "..."}}
-     */
-    private static String createInsertRequest() throws Exception {
+    private static ClientRequest createInsertRequest() throws Exception
+    {
         System.out.print("Enter Name: ");
         String name = scanner.nextLine();
         System.out.print("Enter Address: ");
@@ -164,24 +148,16 @@ public class LibraryClient {
         System.out.print("Enter Phone: ");
         String phone = scanner.nextLine();
 
-        Map<String, Object> request = new HashMap<>();
-        request.put("requestType", "INSERT_MEMBER");
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("name", name);
+        payload.put("address", address);
+        payload.put("phone", phone);
 
-        // Put member data inside a nested "data" object
-        Map<String, String> data = new HashMap<>();
-        data.put("name", name);
-        data.put("address", address);
-        data.put("phone", phone);
-        request.put("data", data);
-
-        return mapper.writeValueAsString(request);
+        return createRequest(RequestType.INSERT, payload);
     }
 
-    /**
-     * Creates JSON request to update an existing member
-     * Format: {"requestType": "UPDATE_MEMBER", "data": {"id": 1, "name": "...", "address": "...", "phone": "..."}}
-     */
-    private static String createUpdateRequest() throws Exception {
+    private static ClientRequest createUpdateRequest() throws Exception
+    {
         System.out.print("Enter Member ID: ");
         int id = Integer.parseInt(scanner.nextLine());
         System.out.print("Enter New Name: ");
@@ -191,82 +167,114 @@ public class LibraryClient {
         System.out.print("Enter New Phone: ");
         String phone = scanner.nextLine();
 
-        Map<String, Object> request = new HashMap<>();
-        request.put("requestType", "UPDATE_MEMBER");
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("id", id);
+        payload.put("name", name);
+        payload.put("address", address);
+        payload.put("phone", phone);
 
-        // Put updated data inside a nested "data" object
-        Map<String, Object> data = new HashMap<>();
-        data.put("id", id);
-        data.put("name", name);
-        data.put("address", address);
-        data.put("phone", phone);
-        request.put("data", data);
-
-        return mapper.writeValueAsString(request);
+        return createRequest(RequestType.UPDATE, payload);
     }
 
-    /**
-     * Creates JSON request to delete a member by ID
-     * Format: {"requestType": "DELETE_MEMBER", "id": 1}
-     */
-    private static String createDeleteRequest() throws Exception {
+    private static ClientRequest createDeleteRequest() throws Exception
+    {
         System.out.print("Enter Member ID to delete: ");
         int id = Integer.parseInt(scanner.nextLine());
 
-        Map<String, Object> request = new HashMap<>();
-        request.put("requestType", "DELETE_MEMBER");
-        request.put("id", id);
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("id", id);
 
-        return mapper.writeValueAsString(request);
+        return createRequest(RequestType.DELETE, payload);
+    }
+
+    // === Communication Methods ===
+    /**
+     * Sends a request and prints the response.
+     *
+     * @param out Writer for socket output.
+     * @param in Reader for socket input.
+     * @param mapper Jackson mapper.
+     * @param request The request to send.
+     * @throws Exception If communication fails.
+     */
+    private static void sendAndPrint(PrintWriter out, BufferedReader in, ObjectMapper mapper, ClientRequest request) throws Exception
+    {
+        String response = sendAndReceive(out, in, mapper, request);
+        parseAndDisplayResponse(response, mapper);
     }
 
     /**
-     * Parses the JSON response from the server and displays it in a user-friendly format
-
+     * Sends a request and returns the response string.
+     *
+     * @param out Writer for socket output.
+     * @param in Reader for socket input.
+     * @param mapper Jackson mapper.
+     * @param request The request to send.
+     * @return The raw JSON response string.
+     * @throws Exception If communication fails.
      */
-    private static void parseAndDisplayResponse(String responseJson) {
-        try {
-            // Convert JSON response to a Map (key-value pairs)
-            Map<String, Object> response = mapper.readValue(responseJson, Map.class);
+    private static String sendAndReceive(PrintWriter out, BufferedReader in, ObjectMapper mapper, ClientRequest request) throws Exception
+    {
+        String json = mapper.writeValueAsString(request);
 
-            // Extract status and message from the ServerResponse wrapper
-            String status = (String) response.get("status");    // "success" or "error"
-            String message = (String) response.get("message");  // Human-readable message
+        System.out.println("\n📤 Sent: " + json);
+        out.println(json);
 
-            System.out.println("\nServer Response:");
+        String response = in.readLine();
+        System.out.println("📥 Received: " + response);
+
+        return response;
+    }
+
+    /**
+     * Parses the JSON response from the server and displays it in a user-friendly format.
+     *
+     * @param responseJson The raw JSON response.
+     * @param mapper Jackson mapper.
+     */
+    private static void parseAndDisplayResponse(String responseJson, ObjectMapper mapper)
+    {
+        try
+        {
+            JsonNode root = mapper.readTree(responseJson);
+            String status = root.get("status").asText();
+            String message = root.get("message").asText();
+
+            System.out.println("\n📋 Server Response:");
             System.out.println("   Status: " + status);
             System.out.println("   Message: " + message);
 
-            // If successful and there's data, display it
-            if ("success".equals(status) && response.get("data") != null) {
-                Object data = response.get("data");
+            if ("success".equals(status) && root.has("data") && !root.get("data").isNull())
+            {
+                JsonNode data = root.get("data");
 
-                // Case 1: Data is a List of members (from GET_ALL)
-                if (data instanceof List) {
-                    List<Map<String, Object>> members = (List<Map<String, Object>>) data;
-                    System.out.println("    Data: " + members.size() + " member(s) found");
-                    for (Map<String, Object> m : members) {
-                        System.out.println("      - ID: " + m.get("id") +
-                                ", Name: " + m.get("name") +
-                                ", Phone: " + m.get("phone"));
+                // Case 1: Data is an array (GET_ALL)
+                if (data.isArray())
+                {
+                    System.out.println("   📊 Data: " + data.size() + " member(s) found");
+                    for (JsonNode member : data)
+                    {
+                        System.out.println("      - ID: " + member.get("id").asInt() +
+                                ", Name: " + member.get("name").asText() +
+                                ", Phone: " + member.get("phone").asText());
                     }
                 }
-                // Case 2: Data is a single Member (from GET_BY_ID, INSERT, UPDATE)
-                else if (data instanceof Map) {
-                    Map<String, Object> member = (Map<String, Object>) data;
-                    System.out.println("   Data: Member{id=" + member.get("id") +
-                            ", name='" + member.get("name") +
-                            "', phone='" + member.get("phone") + "'}");
-                }
-                // Case 3: Data is null (from DELETE operation)
-                else if (data == null) {
-                    System.out.println("    Data: null (operation completed)");
+                // Case 2: Data is a single object (GET_BY_ID, INSERT, UPDATE)
+                else if (data.isObject())
+                {
+                    System.out.println("   👤 Data: Member{id=" + data.get("id").asInt() +
+                            ", name='" + data.get("name").asText() +
+                            "', phone='" + data.get("phone").asText() + "'}");
                 }
             }
-
-        } catch (Exception e) {
-            // If response parsing fails, show error (F16)
-            System.out.println("Error parsing response: " + e.getMessage());
+            else if ("success".equals(status) && (!root.has("data") || root.get("data").isNull()))
+            {
+                System.out.println("   ✅ Data: null (operation completed)");
+            }
+        }
+        catch (Exception e)
+        {
+            System.out.println("❌ Error parsing response: " + e.getMessage());
         }
     }
 }
