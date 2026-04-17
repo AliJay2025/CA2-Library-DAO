@@ -1,70 +1,95 @@
 package com.library.domain;
 
+import java.util.Arrays;
+import java.util.Objects;
+
 public class Member {
     private int id;
     private String name;
     private String address;
     private String phone;
 
+    // F17: New fields for binary file storage
+    private String fileName;
+    private String contentType;
+    private int fileSize;
+    private byte[] profileImage;
+
     // Default constructor (required for Jackson)
     public Member() {}
 
-    public Member(int id, String name, String address, String phone) {
-        if (id < 0)
-            throw new IllegalArgumentException("id must be >= 0");
-        if (name == null || name.trim().isEmpty())
-            throw new IllegalArgumentException("name is required");
-        if (address == null || address.trim().isEmpty())
-            throw new IllegalArgumentException("address is required");
-        if (phone == null || phone.trim().isEmpty())
-            throw new IllegalArgumentException("phone is required");
+    // Constructor without binary data (for metadata-only queries)
+    public Member(int id, String name, String address, String phone,
+                  String fileName, String contentType, int fileSize) {
+        this(id, name, address, phone, fileName, contentType, fileSize, null);
+    }
 
+    // Full constructor with binary data
+    public Member(int id, String name, String address, String phone,
+                  String fileName, String contentType, int fileSize, byte[] profileImage) {
         this.id = id;
-        this.name = name.trim();
-        this.address = address.trim();
-        this.phone = phone.trim();
+        this.name = name;
+        this.address = address;
+        this.phone = phone;
+        this.fileName = fileName == null ? "" : fileName;
+        this.contentType = contentType == null ? "" : contentType;
+        this.fileSize = Math.max(0, fileSize);
+        this.profileImage = profileImage;
     }
 
-    //<editor-fold desc="Constructor">
+    // Constructor without ID (for insert)
     public Member(String name, String address, String phone) {
-        this(0, name, address, phone);
+        this(0, name, address, phone, "", "", 0, null);
     }
-    //</editor-fold>
 
-    //<editor-fold desc="Getter and Setters">
     // Getters
     public int getId() { return id; }
     public String getName() { return name; }
     public String getAddress() { return address; }
     public String getPhone() { return phone; }
+    public String getFileName() { return fileName; }
+    public String getContentType() { return contentType; }
+    public int getFileSize() { return fileSize; }
+    public byte[] getProfileImage() { return profileImage; }
 
-    // Setters (required for Jackson deserialization)
-    public void setId(int id) {
-        if (id < 0) throw new IllegalArgumentException("id must be >= 0");
-        this.id = id;
+    // Setters
+    public void setId(int id) { this.id = id; }
+    public void setName(String name) { this.name = name; }
+    public void setAddress(String address) { this.address = address; }
+    public void setPhone(String phone) { this.phone = phone; }
+    public void setFileName(String fileName) { this.fileName = fileName; }
+    public void setContentType(String contentType) { this.contentType = contentType; }
+    public void setFileSize(int fileSize) { this.fileSize = fileSize; }
+    public void setProfileImage(byte[] profileImage) { this.profileImage = profileImage; }
+
+    // Helper method to check if member has an image
+    public boolean hasImage() {
+        return profileImage != null && profileImage.length > 0;
     }
 
-    public void setName(String name) {
-        if (name == null || name.trim().isEmpty())
-            throw new IllegalArgumentException("name is required");
-        this.name = name.trim();
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Member)) return false;
+        Member member = (Member) o;
+        return id == member.id &&
+                fileSize == member.fileSize &&
+                Objects.equals(name, member.name) &&
+                Objects.equals(address, member.address) &&
+                Objects.equals(phone, member.phone) &&
+                Objects.equals(fileName, member.fileName) &&
+                Objects.equals(contentType, member.contentType) &&
+                Arrays.equals(profileImage, member.profileImage);
     }
 
-    public void setAddress(String address) {
-        if (address == null || address.trim().isEmpty())
-            throw new IllegalArgumentException("address is required");
-        this.address = address.trim();
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, name, address, phone, fileName, contentType, fileSize);
     }
-
-    public void setPhone(String phone) {
-        if (phone == null || phone.trim().isEmpty())
-            throw new IllegalArgumentException("phone is required");
-        this.phone = phone.trim();
-    }
-    //</editor-fold>
 
     @Override
     public String toString() {
-        return "Member{id=" + id + ", name='" + name + "', phone='" + phone + "'}";
+        return String.format("Member{id=%d, name='%s', phone='%s', hasImage=%s, fileSize=%d}",
+                id, name, phone, hasImage(), fileSize);
     }
 }
