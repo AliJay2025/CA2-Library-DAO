@@ -8,8 +8,6 @@ public class Member {
     private String name;
     private String address;
     private String phone;
-
-    // F17: New fields for binary file storage
     private String fileName;
     private String contentType;
     private int fileSize;
@@ -18,19 +16,45 @@ public class Member {
     // Default constructor (required for Jackson)
     public Member() {}
 
+    // Simple constructor for testing (without binary data)
+    public Member(int id, String name, String address, String phone) {
+        this(id, name, address, phone, "", "", 0, null);
+    }
+
     // Constructor without binary data (for metadata-only queries)
     public Member(int id, String name, String address, String phone,
                   String fileName, String contentType, int fileSize) {
         this(id, name, address, phone, fileName, contentType, fileSize, null);
     }
 
-    // Full constructor with binary data
+    // Full constructor with validation
     public Member(int id, String name, String address, String phone,
                   String fileName, String contentType, int fileSize, byte[] profileImage) {
+
+        // VALIDATION: ID must be >= 0
+        if (id < 0) {
+            throw new IllegalArgumentException("id must be >= 0");
+        }
+
+        // VALIDATION: Name cannot be null or empty
+        if (name == null || name.trim().isEmpty()) {
+            throw new IllegalArgumentException("name is required");
+        }
+
+        // VALIDATION: Address cannot be null or empty
+        if (address == null || address.trim().isEmpty()) {
+            throw new IllegalArgumentException("address is required");
+        }
+
+        // VALIDATION: Phone cannot be null or empty
+        if (phone == null || phone.trim().isEmpty()) {
+            throw new IllegalArgumentException("phone is required");
+        }
+
         this.id = id;
-        this.name = name;
-        this.address = address;
-        this.phone = phone;
+        this.name = name.trim();
+        this.address = address.trim();
+        this.phone = phone.trim();
         this.fileName = fileName == null ? "" : fileName;
         this.contentType = contentType == null ? "" : contentType;
         this.fileSize = Math.max(0, fileSize);
@@ -52,14 +76,36 @@ public class Member {
     public int getFileSize() { return fileSize; }
     public byte[] getProfileImage() { return profileImage; }
 
-    // Setters
-    public void setId(int id) { this.id = id; }
-    public void setName(String name) { this.name = name; }
-    public void setAddress(String address) { this.address = address; }
-    public void setPhone(String phone) { this.phone = phone; }
-    public void setFileName(String fileName) { this.fileName = fileName; }
-    public void setContentType(String contentType) { this.contentType = contentType; }
-    public void setFileSize(int fileSize) { this.fileSize = fileSize; }
+    // Setters with validation
+    public void setId(int id) {
+        if (id < 0) throw new IllegalArgumentException("id must be >= 0");
+        this.id = id;
+    }
+
+    public void setName(String name) {
+        if (name == null || name.trim().isEmpty()) {
+            throw new IllegalArgumentException("name is required");
+        }
+        this.name = name.trim();
+    }
+
+    public void setAddress(String address) {
+        if (address == null || address.trim().isEmpty()) {
+            throw new IllegalArgumentException("address is required");
+        }
+        this.address = address.trim();
+    }
+
+    public void setPhone(String phone) {
+        if (phone == null || phone.trim().isEmpty()) {
+            throw new IllegalArgumentException("phone is required");
+        }
+        this.phone = phone.trim();
+    }
+
+    public void setFileName(String fileName) { this.fileName = fileName == null ? "" : fileName; }
+    public void setContentType(String contentType) { this.contentType = contentType == null ? "" : contentType; }
+    public void setFileSize(int fileSize) { this.fileSize = Math.max(0, fileSize); }
     public void setProfileImage(byte[] profileImage) { this.profileImage = profileImage; }
 
     // Helper method to check if member has an image
