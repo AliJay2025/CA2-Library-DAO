@@ -2,26 +2,34 @@ package com.library.shared;
 
 public class FileUploadPayload {
 
+    // === Fields ===
     private int entityId;        // ID of the member this file belongs to
-    private String fileName;     // Original filename with extension
-    private String contentType;  // MIME type (image/png, etc.)
-    private int fileSize;        // Size in bytes (before Base64 encoding)
-    private String fileData;     // Base64-encoded binary data
+    private String fileName;     // Original filename (e.g., "profile.png")
+    private String contentType;  // MIME type (e.g., "image/png")
+    private int fileSize;        // Size in bytes before Base64 encoding
+    private String fileData;     // Base64-encoded binary content
 
-    // Default constructor (required for Jackson)
-    public FileUploadPayload() {}
-
-    // Constructor with all fields
-    public FileUploadPayload(int entityId, String fileName,
-                             String contentType, int fileSize, String fileData) {
-        this.entityId = entityId;
-        this.fileName = fileName;
-        this.contentType = contentType;
-        this.fileSize = fileSize;
-        this.fileData = fileData;
+    // === Constructors ===
+    public FileUploadPayload() {
+        this.entityId    = 0;
+        this.fileName    = "";
+        this.contentType = "";
+        this.fileSize    = 0;
+        this.fileData    = "";
     }
 
-    // Getters and Setters
+    // Constructor for application code
+    public FileUploadPayload(int entityId, String fileName,
+                             String contentType, int fileSize,
+                             String fileData) {
+        this.entityId    = entityId;
+        this.fileName    = fileName;
+        this.contentType = contentType;
+        this.fileSize    = fileSize;
+        this.fileData    = fileData;
+    }
+
+    // === Getters and Setters ===
     public int getEntityId() { return entityId; }
     public void setEntityId(int entityId) { this.entityId = entityId; }
 

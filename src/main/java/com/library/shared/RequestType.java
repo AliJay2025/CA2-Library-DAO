@@ -1,8 +1,5 @@
 package com.library.shared;
 
-/**
- * Enumerates the supported JSON protocol request types for the Library Management System.
- */
 public enum RequestType
 {
     GET_ALL,
@@ -10,5 +7,8 @@ public enum RequestType
     INSERT,
     UPDATE,
     DELETE,
+    UPLOAD,      // F18: Upload a file for a member
+    DOWNLOAD,    // F19: Download a file from a member
+    METADATA,    // F20: Get file metadata without downloading
     DISCONNECT
 }
