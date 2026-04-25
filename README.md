@@ -1,108 +1,49 @@
-📚 Library Management System – Stage 1, 2 & 3
-👥 Group Members
-Abdihafid Gahayr (D00283863)
-Ali Jabril (D00283862)
-🏗️ System Architecture
-📖 What Each Layer Does
-Layer	What It Contains	Simple Explanation
-Presentation Layer	Main.java	CLI menu interface
-Service Layer	Methods in Main.java	Business logic
-Data Access Layer	dao/ + jdbc/	Database communication
-Database	library_database	MySQL with 5 tables
-JSON Protocol	JsonUtil.java	Converts objects ↔ JSON
-✅ Stage 1 Features (F1–F9)
-Option	Feature	Description
-1	F3: Get All Members	Retrieve all members
-2	F4: Get Member by ID	Retrieve member by ID
-3	F6: Insert Member	Add new member
-4	F7: Update Member	Update member details
-5	F8: Filter (Predicate)	Filter members
-6	F9: JSON Conversion	Convert to/from JSON
-7	F5: Delete Member	Delete member
-0	Exit	Exit program
-🗄️ Database Tables
-Table	Description
-member	Members (id, name, address, phone)
-book	Books
-category	Book categories
-shelf	Book locations
-staff	Staff members
-🛠️ Running Stage 1
-Start MySQL (XAMPP)
-Import database (sql/create_db.sql)
-Run Main.java
-Use menu options
-📁 Project Structure
-src/main/java/com/library/
-├── Main.java
-├── dao/
-├── jdbc/
-├── domain/
-├── db/
-├── json/
-├── server/
-├── client/
-└── model/
-📡 Stage 2 – Client-Server System
-🚀 Features (F10–F16)
-Feature	Description	Status
-F10	Multithreaded Server	✅
-F11	ServerResponse Wrapper	✅
-F12	Get Operations	✅
-F13	Insert	✅
-F14	Delete	✅
-F15	Update	✅
-F16	Error Handling	✅
-📡 Communication Protocol
-Request Format
-{
-  "requestType": "REQUEST_TYPE",
-  "id": 1,
-  "data": {}
-}
-Response Format
-{
-  "status": "success",
-  "message": "Operation completed",
-  "data": {}
-}
-📋 Request Types
-Request	Description
-GET_ALL_MEMBERS	Get all
-GET_MEMBER_BY_ID	Get by ID
-INSERT_MEMBER	Insert
-UPDATE_MEMBER	Update
-DELETE_MEMBER	Delete
-❌ Error Example
-{
-  "status": "error",
-  "message": "Member not found",
-  "data": null
-}
-🛠️ Running Stage 2
-Run LibraryServer.java
-Run LibraryClient.java
-Use menu options
-💾 Stage 3 – Binary File Handling & Testing
-🔧 F17: Database Extension
+markdown
+# Library Management System - Stage 3
 
-Added support for file storage:
+## Group Members
+- Abdihafid Gahayr (D00283863)
+- Ali Jabril (D00283862)
 
-file_name
-content_type
-file_size
-profile_image (LONGBLOB)
-ALTER TABLE member ADD COLUMN file_name VARCHAR(255) NOT NULL DEFAULT '';
-ALTER TABLE member ADD COLUMN content_type VARCHAR(100) NOT NULL DEFAULT '';
-ALTER TABLE member ADD COLUMN file_size INT NOT NULL DEFAULT 0;
-ALTER TABLE member ADD COLUMN profile_image LONGBLOB;
-📤 F18: File Upload
-Process
-Read file → bytes
-Encode Base64
-Send to server
-Decode + store in DB
-Example
+---
+
+## ✅ Stage 3 Requirements Implemented
+
+| Feature | Description | Status |
+|---------|-------------|--------|
+| **F17** | Binary Schema Extension (BLOB + metadata columns) | ✅ |
+| **F18** | Binary File Upload (Base64 encode/decode) | ✅ |
+| **F19** | Binary File Retrieval (download and save) | ✅ |
+| **F20** | File Metadata Query (no BLOB) | ✅ |
+| **F21** | Disconnect / Exit Protocol | ✅ |
+| **F22** | JUnit 5 Unit Tests | ✅ |
+
+---
+
+## F17: Binary Schema
+
+Added to `member` table in MySQL:
+
+| Column | Type |
+|--------|------|
+| `file_name` | VARCHAR(255) |
+| `content_type` | VARCHAR(100) |
+| `file_size` | INT |
+| `profile_image` | LONGBLOB |
+
+---
+
+## F18: File Upload
+
+**Process:**
+1. Client reads file → `Files.readAllBytes()`
+2. Encodes to Base64
+3. Sends `UPLOAD` request with metadata
+4. Server decodes Base64
+5. Stores in DB via `PreparedStatement.setBytes()`
+
+**Request Example:**
+```json
 {
   "requestType": "UPLOAD",
   "payload": {
@@ -110,48 +51,123 @@ Example
     "fileName": "profile.png",
     "contentType": "image/png",
     "fileSize": 12345,
-    "fileData": "BASE64..."
+    "fileData": "iVBORw0KGgo..."
   }
 }
-📥 F19: File Download
-Process
-Request by ID
-Retrieve BLOB
-Encode Base64
-Save locally
-📊 F20: Metadata Query
+F19: File Download
+Process:
 
-Returns:
+Client sends DOWNLOAD request with ID
 
-filename
-size
-type
-hasImage
-🔌 F21: Disconnect
+Server retrieves BLOB via ResultSet.getBytes()
+
+Encodes to Base64
+
+Client decodes and saves to downloads/ folder
+
+Response Example:
+
+json
 {
-  "requestType": "DISCONNECT"
+  "status": "success",
+  "message": "File retrieved successfully",
+  "data": {
+    "fileName": "profile.png",
+    "fileSize": 12345,
+    "fileData": "iVBORw0KGgo..."
+  }
 }
-🧪 F22: Unit Tests
-Results
-16 tests passed, 0 failures
-Categories
-Category	Result
-JSON Tests	✅
-DAO Tests	✅
-▶️ Running Stage 3
+F20: Metadata Query
+Returns file information WITHOUT fetching the BLOB:
+
+json
+{
+  "status": "success",
+  "data": {
+    "fileName": "profile.png",
+    "fileSize": 12345,
+    "contentType": "image/png",
+    "hasImage": true
+  }
+}
+F21: Disconnect
+Client sends before closing:
+
+json
+{ "requestType": "DISCONNECT" }
+Server responds with "Goodbye" and releases thread.
+
+F22: Unit Tests
+Test Results
+text
+JsonUtilTest: 9 tests passed
+MemberDaoTest: 7 tests passed
+Total: 16 tests passed, 0 failures
+Test Categories
+Category	Test Method	Result
+JSON Round-trip	memberToJson_andBack_returnsEqualMember	✅
+JSON List	memberListToJson_andBack_returnsEqualList	✅
+DAO Insert	insert_validMember_returnsPositiveId	✅
+DAO Find	findById_returnsOptionalForExistingId	✅
+DAO Update	update_existingMember_updatesValues	✅
+DAO Delete	deleteById_withInvalidId_returnsFalse	✅
+Run Tests
+bash
+mvn test
+🚀 How to Run Stage 3
+1. Start MySQL (XAMPP)
+Start MySQL in XAMPP Control Panel
+
+2. Run Server
+bash
 mvn exec:java -Dexec.mainClass=com.library.server.LibraryServer
+3. Run Client
+bash
 mvn exec:java -Dexec.mainClass=com.library.client.LibraryClient
-📋 Final Feature Summary
-Feature	Status
-Stage 1 (CRUD + JSON)	✅
-Stage 2 (Client-Server)	✅
-Stage 3 (File Handling)	✅
-Unit Tests	✅
+4. Test Features
+Menu Option	Feature
+1	Get All Members
+2	Get Member by ID
+3	Insert Member
+4	Update Member
+5	Delete Member
+6	Upload Profile Image (F18)
+7	Download Profile Image (F19)
+8	Get File Metadata (F20)
+0	Exit (F21)
+📁 Project Structure
+text
+src/main/java/com/library/
+├── client/
+│   └── LibraryClient.java
+├── server/
+│   ├── LibraryServer.java
+│   ├── ClientHandler.java
+│   └── RequestDispatcher.java
+├── dao/
+│   ├── MemberDao.java
+│   └── DaoRegistry.java
+├── jdbc/
+│   └── JdbcMemberDao.java
+├── domain/
+│   └── Member.java
+├── shared/
+│   ├── ClientRequest.java
+│   ├── RequestType.java
+│   ├── ServerResponse.java
+│   └── FileUploadPayload.java
+├── json/
+│   └── JsonUtil.java
+└── db/
+    └── DatabaseConnection.java
 🔗 GitHub Repository
+https://github.com/AliJay2025/CA2-Library-DAO/tree/stage-3
 
-https://github.com/AliJay2025/CA2-Library-DAO
-
-📅 Deadlines
-Stage 1: ✅ Completed
-Stage 2: ✅ Completed
-Stage 3: ✅ Completed
+✅ Summary
+Feature	Status
+F17 - Binary Schema	✅ Complete
+F18 - File Upload	✅ Complete
+F19 - File Download	✅ Complete
+F20 - Metadata Query	✅ Complete
+F21 - Disconnect	✅ Complete
+F22 - Unit Tests	✅ Complete (16 passing)
