@@ -11,7 +11,7 @@ public class ClientRequest
     public ClientRequest()
     {
         _requestType = "";
-        _payload = new HashMap<>();  // FIXED: Map.of() not available in Java 8
+        _payload = new HashMap<>();
     }
 
     public String getRequestType() { return _requestType; }

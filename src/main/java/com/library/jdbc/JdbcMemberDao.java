@@ -99,7 +99,7 @@ public class JdbcMemberDao implements MemberDao {
                         rs.getString("file_name"),
                         rs.getString("content_type"),
                         rs.getInt("file_size"),
-                        null  // No image data
+                        null
                 );
                 return Optional.of(m);
             }
@@ -154,9 +154,9 @@ public class JdbcMemberDao implements MemberDao {
         }
     }
 
-    // F17: Update member including image
+    // F17: Update member including image - FIXED to return Member
     @Override
-    public boolean update(int id, Member member) throws Exception {
+    public Member update(int id, Member member) throws Exception {
         String sql = "UPDATE member SET name = ?, address = ?, phone = ?, "
                 + "file_name = ?, content_type = ?, file_size = ?, profile_image = ? "
                 + "WHERE id = ?";
@@ -173,7 +173,12 @@ public class JdbcMemberDao implements MemberDao {
             ps.setBytes(7, member.getProfileImage());
             ps.setInt(8, id);
 
-            return ps.executeUpdate() == 1;
+            int rows = ps.executeUpdate();
+            if (rows == 1) {
+                member.setId(id);
+                return member;
+            }
+            return null;
         }
     }
 

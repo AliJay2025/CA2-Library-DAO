@@ -1,7 +1,7 @@
 package com.library.server;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.library.dao.MemberDao;
+import com.library.dao.DaoRegistry;
 import com.library.shared.ClientRequest;
 import com.library.shared.ServerResponse;
 
@@ -17,17 +17,16 @@ public class ClientHandler implements Runnable
     private final ObjectMapper _mapper;
     private final RequestDispatcher _dispatcher;
 
-    public ClientHandler(Socket socket, MemberDao dao)
+    public ClientHandler(Socket socket, DaoRegistry registry)
     {
         if (socket == null)
             throw new IllegalArgumentException("socket is required");
-
-        if (dao == null)
-            throw new IllegalArgumentException("dao is required");
+        if (registry == null)
+            throw new IllegalArgumentException("registry is required");
 
         _socket = socket;
         _mapper = new ObjectMapper();
-        _dispatcher = new RequestDispatcher(dao);
+        _dispatcher = new RequestDispatcher(registry);
     }
 
     @Override
@@ -37,7 +36,6 @@ public class ClientHandler implements Runnable
              PrintWriter out = new PrintWriter(_socket.getOutputStream(), true))
         {
             String line;
-
             while ((line = in.readLine()) != null)
             {
                 System.out.println("Received: " + line);

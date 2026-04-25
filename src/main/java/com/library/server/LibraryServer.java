@@ -30,7 +30,7 @@ public class LibraryServer
 
     public void start() throws IOException
     {
-        System.out.println("  LIBRARY SERVER - STAGE 2");
+        System.out.println("  LIBRARY SERVER - STAGE 3");
         System.out.println("----------------------------------------");
         System.out.println("Server listening on port " + _port);
 

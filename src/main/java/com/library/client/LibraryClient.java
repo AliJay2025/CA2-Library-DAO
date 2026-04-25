@@ -9,32 +9,21 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 
-/**
- * Console client that communicates with the LibraryServer using JSON protocol.
- * User can choose options from a menu to perform CRUD operations.
- *
- * F12-F15: All CRUD operations are implemented
- * F16: Error handling is implemented
- */
 public class LibraryClient
 {
-    // === Static Fields ===
     private static final String HOST = "localhost";
     private static final int PORT = 8080;
     private static final ObjectMapper mapper = new ObjectMapper();
     private static final Scanner scanner = new Scanner(System.in);
 
-    // === Methods ===
-    /**
-     * Entry point for the client program.
-     *
-     * @param args Command-line arguments.
-     * @throws Exception If communication fails.
-     */
     public static void main(String[] args) throws Exception
     {
         System.out.println("------------------------------------------");
@@ -56,27 +45,14 @@ public class LibraryClient
 
                 switch (choice)
                 {
-                    case 1:
-                        request = createRequest(RequestType.GET_ALL, null);
-                        break;
-                    case 2:
-                        request = createGetByIdRequest();
-                        break;
-                    case 3:
-                        request = createInsertRequest();
-                        break;
-                    case 4:
-                        request = createUpdateRequest();
-                        break;
-                    case 5:
-                        request = createDeleteRequest();
-                        break;
-                    case 0:
-                        System.out.println("\nGoodbye!");
-                        return;
-                    default:
-                        System.out.println("\nInvalid choice. Please try again.");
-                        continue;
+                    case 1: request = createRequest(RequestType.GET_ALL, null); break;
+                    case 2: request = createGetByIdRequest(); break;
+                    case 3: request = createInsertRequest(); break;
+                    case 4: request = createUpdateRequest(); break;
+                    case 5: request = createDeleteRequest(); break;
+                    case 6: request = createUploadRequest(); break;  // F18
+                    case 0: System.out.println("\nGoodbye!"); return;
+                    default: System.out.println("\nInvalid choice."); continue;
                 }
 
                 if (request != null)
@@ -92,16 +68,16 @@ public class LibraryClient
         }
     }
 
-    // === Menu Methods ===
     private static void displayMenu()
     {
-        System.out.println("  LIBRARY CLIENT MENU");
+        System.out.println("\n  LIBRARY CLIENT MENU");
         System.out.println("--------------------------------");
         System.out.println("  1. Get All Members");
         System.out.println("  2. Get Member by ID");
         System.out.println("  3. Insert New Member");
         System.out.println("  4. Update Member");
         System.out.println("  5. Delete Member");
+        System.out.println("  6. Upload Profile Image (F18)");
         System.out.println("  0. Exit");
         System.out.println("------------------------------");
         System.out.print("Enter your choice: ");
@@ -109,17 +85,10 @@ public class LibraryClient
 
     private static int getUserChoice()
     {
-        try
-        {
-            return Integer.parseInt(scanner.nextLine());
-        }
-        catch (NumberFormatException e)
-        {
-            return -1;
-        }
+        try { return Integer.parseInt(scanner.nextLine()); }
+        catch (NumberFormatException e) { return -1; }
     }
 
-    // === Request Creation Methods ===
     private static ClientRequest createRequest(RequestType type, Map<String, Object> payload)
     {
         ClientRequest request = new ClientRequest();
@@ -128,18 +97,17 @@ public class LibraryClient
         return request;
     }
 
-    private static ClientRequest createGetByIdRequest() throws Exception
+    private static ClientRequest createGetByIdRequest()
     {
         System.out.print("Enter Member ID: ");
         int id = Integer.parseInt(scanner.nextLine());
 
         Map<String, Object> payload = new HashMap<>();
         payload.put("id", id);
-
         return createRequest(RequestType.GET_BY_ID, payload);
     }
 
-    private static ClientRequest createInsertRequest() throws Exception
+    private static ClientRequest createInsertRequest()
     {
         System.out.print("Enter Name: ");
         String name = scanner.nextLine();
@@ -152,11 +120,10 @@ public class LibraryClient
         payload.put("name", name);
         payload.put("address", address);
         payload.put("phone", phone);
-
         return createRequest(RequestType.INSERT, payload);
     }
 
-    private static ClientRequest createUpdateRequest() throws Exception
+    private static ClientRequest createUpdateRequest()
     {
         System.out.print("Enter Member ID: ");
         int id = Integer.parseInt(scanner.nextLine());
@@ -172,66 +139,85 @@ public class LibraryClient
         payload.put("name", name);
         payload.put("address", address);
         payload.put("phone", phone);
-
         return createRequest(RequestType.UPDATE, payload);
     }
 
-    private static ClientRequest createDeleteRequest() throws Exception
+    private static ClientRequest createDeleteRequest()
     {
         System.out.print("Enter Member ID to delete: ");
         int id = Integer.parseInt(scanner.nextLine());
 
         Map<String, Object> payload = new HashMap<>();
         payload.put("id", id);
-
         return createRequest(RequestType.DELETE, payload);
     }
 
-    // === Communication Methods ===
     /**
-     * Sends a request and prints the response.
+     * F18: Creates an upload request with file data.
+     * Following t16_json Section 7 pattern.
      *
-     * @param out Writer for socket output.
-     * @param in Reader for socket input.
-     * @param mapper Jackson mapper.
-     * @param request The request to send.
-     * @throws Exception If communication fails.
+     * Steps:
+     * 1. Read file from disk using Files.readAllBytes()
+     * 2. Encode to Base64 using Base64.getEncoder()
+     * 3. Build payload with metadata + encoded data
      */
+    private static ClientRequest createUploadRequest() throws Exception
+    {
+        System.out.print("Enter Member ID to upload image for: ");
+        int id = Integer.parseInt(scanner.nextLine());
+
+        System.out.print("Enter image file path (e.g., profile.png): ");
+        String filePath = scanner.nextLine();
+
+        // Read file from disk
+        Path path = Paths.get(filePath);
+        if (!Files.exists(path)) {
+            System.out.println("   File not found: " + filePath);
+            return null;
+        }
+
+        byte[] fileBytes = Files.readAllBytes(path);
+
+        // Encode to Base64 (t16_json Section 7)
+        String base64Data = Base64.getEncoder().encodeToString(fileBytes);
+
+        // Get file info
+        String fileName = path.getFileName().toString();
+        String contentType = Files.probeContentType(path);
+        if (contentType == null) contentType = "application/octet-stream";
+        int fileSize = fileBytes.length;
+
+        System.out.println("   File: " + fileName + " (" + fileSize + " bytes)");
+        System.out.println("   Type: " + contentType);
+
+        // Build payload
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("entityId", id);
+        payload.put("fileName", fileName);
+        payload.put("contentType", contentType);
+        payload.put("fileSize", fileSize);
+        payload.put("fileData", base64Data);
+
+        return createRequest(RequestType.UPLOAD, payload);
+    }
+
     private static void sendAndPrint(PrintWriter out, BufferedReader in, ObjectMapper mapper, ClientRequest request) throws Exception
     {
         String response = sendAndReceive(out, in, mapper, request);
         parseAndDisplayResponse(response, mapper);
     }
 
-    /**
-     * Sends a request and returns the response string.
-     *
-     * @param out Writer for socket output.
-     * @param in Reader for socket input.
-     * @param mapper Jackson mapper.
-     * @param request The request to send.
-     * @return The raw JSON response string.
-     * @throws Exception If communication fails.
-     */
     private static String sendAndReceive(PrintWriter out, BufferedReader in, ObjectMapper mapper, ClientRequest request) throws Exception
     {
         String json = mapper.writeValueAsString(request);
-
-        System.out.println("\n Sent: " + json);
+        System.out.println("\n📤 Sent: " + json);
         out.println(json);
 
         String response = in.readLine();
-        System.out.println(" Received: " + response);
-
+        System.out.println("📥 Received: " + response);
         return response;
     }
 
-    /**
-     * Parses the JSON response from the server and displays it in a user-friendly format.
-     *
-     * @param responseJson The raw JSON response.
-     * @param mapper Jackson mapper.
-     */
     private static void parseAndDisplayResponse(String responseJson, ObjectMapper mapper)
     {
         try
@@ -247,29 +233,11 @@ public class LibraryClient
             if ("success".equals(status) && root.has("data") && !root.get("data").isNull())
             {
                 JsonNode data = root.get("data");
-
-                // Case 1: Data is an array (GET_ALL)
-                if (data.isArray())
-                {
-                    System.out.println("   📊 Data: " + data.size() + " member(s) found");
-                    for (JsonNode member : data)
-                    {
-                        System.out.println("      - ID: " + member.get("id").asInt() +
-                                ", Name: " + member.get("name").asText() +
-                                ", Phone: " + member.get("phone").asText());
-                    }
-                }
-                // Case 2: Data is a single object (GET_BY_ID, INSERT, UPDATE)
-                else if (data.isObject())
-                {
-                    System.out.println("   👤 Data: Member{id=" + data.get("id").asInt() +
-                            ", name='" + data.get("name").asText() +
-                            "', phone='" + data.get("phone").asText() + "'}");
-                }
+                System.out.println("   Data: " + data.toString());
             }
             else if ("success".equals(status) && (!root.has("data") || root.get("data").isNull()))
             {
-                System.out.println("Data: null (operation completed)");
+                System.out.println("   Data: null (operation completed)");
             }
         }
         catch (Exception e)

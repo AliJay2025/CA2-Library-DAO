@@ -9,7 +9,10 @@ public interface MemberDao {
     int insert(String name, String address, String phone) throws Exception;
     Optional<Member> findById(int id) throws Exception;
     List<Member> findAll() throws Exception;
-    boolean update(int id, Member member) throws Exception;
+
+    // FIXED: Returns Member, not boolean
+    Member update(int id, Member member) throws Exception;
+
     boolean deleteById(int id) throws Exception;
 
     // F17: New method for inserting member with image
