@@ -17,6 +17,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 
+/**
+ * Client that connects to LibraryServer and sends JSON requests
+ */
 public class LibraryClient
 {
     private static final String HOST = "localhost";
@@ -27,7 +30,7 @@ public class LibraryClient
     public static void main(String[] args) throws Exception
     {
         System.out.println("------------------------------------------");
-        System.out.println("  LIBRARY CLIENT - STAGE 2");
+        System.out.println("  LIBRARY CLIENT - STAGE 3");
         System.out.println("------------------------------------------\n");
 
         try (Socket socket = new Socket(HOST, PORT);
@@ -45,13 +48,15 @@ public class LibraryClient
 
                 switch (choice)
                 {
-                    case 1: request = createRequest(RequestType.GET_ALL, null); break;
-                    case 2: request = createGetByIdRequest(); break;
-                    case 3: request = createInsertRequest(); break;
-                    case 4: request = createUpdateRequest(); break;
-                    case 5: request = createDeleteRequest(); break;
-                    case 6: request = createUploadRequest(); break;  // F18
-                    case 0: System.out.println("\nGoodbye!"); return;
+                    case 1: request = createRequest(RequestType.GET_ALL, null); break;      // F3
+                    case 2: request = createGetByIdRequest(); break;                       // F4
+                    case 3: request = createInsertRequest(); break;                        // F6
+                    case 4: request = createUpdateRequest(); break;                        // F7
+                    case 5: request = createDeleteRequest(); break;                        // F5
+                    case 6: request = createUploadRequest(); break;                        // F18
+                    case 7: request = createDownloadRequest(); break;                      // F19
+                    case 8: request = createMetadataRequest(); break;                      // F20
+                    case 0: System.out.println("\nGoodbye!"); return;                      // F21
                     default: System.out.println("\nInvalid choice."); continue;
                 }
 
@@ -68,27 +73,32 @@ public class LibraryClient
         }
     }
 
+    // Display menu options to user
     private static void displayMenu()
     {
         System.out.println("\n  LIBRARY CLIENT MENU");
         System.out.println("--------------------------------");
-        System.out.println("  1. Get All Members");
-        System.out.println("  2. Get Member by ID");
-        System.out.println("  3. Insert New Member");
-        System.out.println("  4. Update Member");
-        System.out.println("  5. Delete Member");
+        System.out.println("  1. Get All Members (F3)");
+        System.out.println("  2. Get Member by ID (F4)");
+        System.out.println("  3. Insert New Member (F6)");
+        System.out.println("  4. Update Member (F7)");
+        System.out.println("  5. Delete Member (F5)");
         System.out.println("  6. Upload Profile Image (F18)");
-        System.out.println("  0. Exit");
+        System.out.println("  7. Download Profile Image (F19)");
+        System.out.println("  8. Get File Metadata (F20)");
+        System.out.println("  0. Exit (F21)");
         System.out.println("------------------------------");
         System.out.print("Enter your choice: ");
     }
 
+    // Read user input as integer
     private static int getUserChoice()
     {
         try { return Integer.parseInt(scanner.nextLine()); }
         catch (NumberFormatException e) { return -1; }
     }
 
+    // Create a generic request
     private static ClientRequest createRequest(RequestType type, Map<String, Object> payload)
     {
         ClientRequest request = new ClientRequest();
@@ -97,6 +107,7 @@ public class LibraryClient
         return request;
     }
 
+    // F4: Create request to get member by ID
     private static ClientRequest createGetByIdRequest()
     {
         System.out.print("Enter Member ID: ");
@@ -107,6 +118,7 @@ public class LibraryClient
         return createRequest(RequestType.GET_BY_ID, payload);
     }
 
+    // F6: Create request to insert new member
     private static ClientRequest createInsertRequest()
     {
         System.out.print("Enter Name: ");
@@ -123,6 +135,7 @@ public class LibraryClient
         return createRequest(RequestType.INSERT, payload);
     }
 
+    // F7: Create request to update member
     private static ClientRequest createUpdateRequest()
     {
         System.out.print("Enter Member ID: ");
@@ -142,6 +155,7 @@ public class LibraryClient
         return createRequest(RequestType.UPDATE, payload);
     }
 
+    // F5: Create request to delete member
     private static ClientRequest createDeleteRequest()
     {
         System.out.print("Enter Member ID to delete: ");
@@ -152,15 +166,7 @@ public class LibraryClient
         return createRequest(RequestType.DELETE, payload);
     }
 
-    /**
-     * F18: Creates an upload request with file data.
-     * Following t16_json Section 7 pattern.
-     *
-     * Steps:
-     * 1. Read file from disk using Files.readAllBytes()
-     * 2. Encode to Base64 using Base64.getEncoder()
-     * 3. Build payload with metadata + encoded data
-     */
+    // F18: Create request to upload file - reads file, converts to Base64
     private static ClientRequest createUploadRequest() throws Exception
     {
         System.out.print("Enter Member ID to upload image for: ");
@@ -169,19 +175,19 @@ public class LibraryClient
         System.out.print("Enter image file path (e.g., profile.png): ");
         String filePath = scanner.nextLine();
 
-        // Read file from disk
         Path path = Paths.get(filePath);
         if (!Files.exists(path)) {
             System.out.println("   File not found: " + filePath);
             return null;
         }
 
+        // Read file bytes
         byte[] fileBytes = Files.readAllBytes(path);
 
-        // Encode to Base64 (t16_json Section 7)
+        // Convert to Base64 string
         String base64Data = Base64.getEncoder().encodeToString(fileBytes);
 
-        // Get file info
+        // Get file metadata
         String fileName = path.getFileName().toString();
         String contentType = Files.probeContentType(path);
         if (contentType == null) contentType = "application/octet-stream";
@@ -201,12 +207,42 @@ public class LibraryClient
         return createRequest(RequestType.UPLOAD, payload);
     }
 
+    // F19: Create request to download file
+    private static ClientRequest createDownloadRequest() throws Exception
+    {
+        System.out.print("Enter Member ID to download image for: ");
+        int id = Integer.parseInt(scanner.nextLine());
+
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("id", id);
+
+        return createRequest(RequestType.DOWNLOAD, payload);
+    }
+
+    // F20: Create request to get metadata only (no file download)
+    private static ClientRequest createMetadataRequest() throws Exception
+    {
+        System.out.print("Enter Member ID (or 0 for all): ");
+        int id = Integer.parseInt(scanner.nextLine());
+
+        Map<String, Object> payload = new HashMap<>();
+        if (id == 0) {
+            payload.put("all", true);
+        } else {
+            payload.put("id", id);
+        }
+
+        return createRequest(RequestType.METADATA, payload);
+    }
+
+    // Send request and print response
     private static void sendAndPrint(PrintWriter out, BufferedReader in, ObjectMapper mapper, ClientRequest request) throws Exception
     {
         String response = sendAndReceive(out, in, mapper, request);
         parseAndDisplayResponse(response, mapper);
     }
 
+    // Send request and receive response
     private static String sendAndReceive(PrintWriter out, BufferedReader in, ObjectMapper mapper, ClientRequest request) throws Exception
     {
         String json = mapper.writeValueAsString(request);
@@ -218,6 +254,7 @@ public class LibraryClient
         return response;
     }
 
+    // Parse server response and display appropriately
     private static void parseAndDisplayResponse(String responseJson, ObjectMapper mapper)
     {
         try
@@ -233,7 +270,34 @@ public class LibraryClient
             if ("success".equals(status) && root.has("data") && !root.get("data").isNull())
             {
                 JsonNode data = root.get("data");
-                System.out.println("   Data: " + data.toString());
+
+                // F19: Check if this is a file download response
+                if (data.has("fileData") && data.has("fileName"))
+                {
+                    String fileName = data.get("fileName").asText();
+                    String fileData = data.get("fileData").asText();
+                    int fileSize = data.get("fileSize").asInt();
+
+                    System.out.println("   Downloading: " + fileName + " (" + fileSize + " bytes)");
+
+                    // Decode Base64 back to bytes
+                    byte[] imageBytes = Base64.getDecoder().decode(fileData);
+
+                    // Save to disk
+                    Path downloadDir = Paths.get("downloads");
+                    if (!Files.exists(downloadDir)) {
+                        Files.createDirectories(downloadDir);
+                    }
+
+                    Path downloadPath = downloadDir.resolve(fileName);
+                    Files.write(downloadPath, imageBytes);
+
+                    System.out.println("   File saved to: " + downloadPath.toAbsolutePath());
+                }
+                else
+                {
+                    System.out.println("   Data: " + data.toString());
+                }
             }
             else if ("success".equals(status) && (!root.has("data") || root.get("data").isNull()))
             {
