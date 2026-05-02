@@ -8,46 +8,56 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 public class JdbcMemberDao implements MemberDao {
 
+    // F17: Insert member with image
     @Override
-    public int insert(String name, String address, String phone) throws Exception {
-        if (name == null || name.trim().isEmpty())
-            throw new IllegalArgumentException("name is required");
-        if (address == null || address.trim().isEmpty())
-            throw new IllegalArgumentException("address is required");
-        if (phone == null || phone.trim().isEmpty())
-            throw new IllegalArgumentException("phone is required");
-
-        String sql = "INSERT INTO member (name, address, phone) VALUES (?, ?, ?)";
+    public int insertMemberWithImage(Member member) throws Exception {
+        String sql = "INSERT INTO member (name, address, phone, file_name, content_type, file_size, profile_image) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection c = DatabaseConnection.getConnection();
              PreparedStatement ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
-            ps.setString(1, name.trim());
-            ps.setString(2, address.trim());
-            ps.setString(3, phone.trim());
+            ps.setString(1, member.getName());
+            ps.setString(2, member.getAddress());
+            ps.setString(3, member.getPhone());
+            ps.setString(4, member.getFileName());
+            ps.setString(5, member.getContentType());
+            ps.setInt(6, member.getFileSize());
+            ps.setBytes(7, member.getProfileImage());
 
             int rows = ps.executeUpdate();
             if (rows != 1)
                 throw new IllegalStateException("Insert failed. rows=" + rows);
 
             try (ResultSet keys = ps.getGeneratedKeys()) {
-                if (!keys.next())
-                    throw new IllegalStateException("No generated key returned");
-                return keys.getInt(1);
+                if (keys.next()) {
+                    int generatedId = keys.getInt(1);
+                    member.setId(generatedId);
+                    return generatedId;
+                }
+                throw new IllegalStateException("No generated key returned");
             }
         }
     }
 
+    // F17: Regular insert without image (for backward compatibility)
+    @Override
+    public int insert(String name, String address, String phone) throws Exception {
+        Member m = new Member(name, address, phone);
+        return insertMemberWithImage(m);
+    }
+
+    // F17: Find by ID including image
     @Override
     public Optional<Member> findById(int id) throws Exception {
         if (id <= 0)
             return Optional.empty();
 
-        String sql = "SELECT id, name, address, phone FROM member WHERE id = ?";
+        String sql = "SELECT id, name, address, phone, file_name, content_type, file_size, profile_image "
+                + "FROM member WHERE id = ?";
 
         try (Connection c = DatabaseConnection.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
@@ -63,9 +73,44 @@ public class JdbcMemberDao implements MemberDao {
         }
     }
 
+    // F20: Find metadata only (no BLOB)
+    @Override
+    public Optional<Member> findMetadataById(int id) throws Exception {
+        if (id <= 0)
+            return Optional.empty();
+
+        String sql = "SELECT id, name, address, phone, file_name, content_type, file_size "
+                + "FROM member WHERE id = ?";
+
+        try (Connection c = DatabaseConnection.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+
+            ps.setInt(1, id);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next())
+                    return Optional.empty();
+
+                Member m = new Member(
+                        rs.getInt("id"),
+                        rs.getString("name"),
+                        rs.getString("address"),
+                        rs.getString("phone"),
+                        rs.getString("file_name"),
+                        rs.getString("content_type"),
+                        rs.getInt("file_size"),
+                        null
+                );
+                return Optional.of(m);
+            }
+        }
+    }
+
+    // F17: Find all (with image - careful for performance)
     @Override
     public List<Member> findAll() throws Exception {
-        String sql = "SELECT id, name, address, phone FROM member ORDER BY id";
+        String sql = "SELECT id, name, address, phone, file_name, content_type, file_size, profile_image "
+                + "FROM member ORDER BY id";
 
         try (Connection c = DatabaseConnection.getConnection();
              PreparedStatement ps = c.prepareStatement(sql);
@@ -80,12 +125,41 @@ public class JdbcMemberDao implements MemberDao {
         }
     }
 
+    // F20: Find all metadata only (no BLOB) - better performance
+    @Override
+    public List<Member> findAllMetadataOnly() throws Exception {
+        String sql = "SELECT id, name, address, phone, file_name, content_type, file_size "
+                + "FROM member ORDER BY id";
+
+        try (Connection c = DatabaseConnection.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            List<Member> members = new ArrayList<>();
+
+            while (rs.next()) {
+                Member m = new Member(
+                        rs.getInt("id"),
+                        rs.getString("name"),
+                        rs.getString("address"),
+                        rs.getString("phone"),
+                        rs.getString("file_name"),
+                        rs.getString("content_type"),
+                        rs.getInt("file_size"),
+                        null
+                );
+                members.add(m);
+            }
+            return members;
+        }
+    }
+
+    // F17: Update member including image - FIXED to return Member
     @Override
     public Member update(int id, Member member) throws Exception {
-        if (id <= 0 || member == null)
-            return null;
-
-        String sql = "UPDATE member SET name = ?, address = ?, phone = ? WHERE id = ?";
+        String sql = "UPDATE member SET name = ?, address = ?, phone = ?, "
+                + "file_name = ?, content_type = ?, file_size = ?, profile_image = ? "
+                + "WHERE id = ?";
 
         try (Connection c = DatabaseConnection.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
@@ -93,27 +167,22 @@ public class JdbcMemberDao implements MemberDao {
             ps.setString(1, member.getName());
             ps.setString(2, member.getAddress());
             ps.setString(3, member.getPhone());
-            ps.setInt(4, id);
+            ps.setString(4, member.getFileName());
+            ps.setString(5, member.getContentType());
+            ps.setInt(6, member.getFileSize());
+            ps.setBytes(7, member.getProfileImage());
+            ps.setInt(8, id);
 
             int rows = ps.executeUpdate();
             if (rows == 1) {
-                // Need to set the ID on the member object
-                // You'll need to add setId method to Member class
-                try {
-                    // Use reflection or add setId method to Member class
-                    java.lang.reflect.Field idField = member.getClass().getDeclaredField("id");
-                    idField.setAccessible(true);
-                    idField.set(member, id);
-                } catch (Exception e) {
-                    // If reflection fails, create a new Member with the ID
-                    return new Member(id, member.getName(), member.getAddress(), member.getPhone());
-                }
+                member.setId(id);
                 return member;
             }
             return null;
         }
     }
 
+    // Delete by ID
     @Override
     public boolean deleteById(int id) throws Exception {
         if (id <= 0)
@@ -129,18 +198,17 @@ public class JdbcMemberDao implements MemberDao {
         }
     }
 
-    @Override
-    public List<Member> findByFilter(java.util.function.Predicate<Member> filter) throws Exception {
-        return findAll().stream()
-                .filter(filter)
-                .collect(Collectors.toList());
-    }
-
+    // Map full row including BLOB
     private Member mapRow(ResultSet rs) throws SQLException {
-        int id = rs.getInt("id");
-        String name = rs.getString("name");
-        String address = rs.getString("address");
-        String phone = rs.getString("phone");
-        return new Member(id, name, address, phone);
+        return new Member(
+                rs.getInt("id"),
+                rs.getString("name"),
+                rs.getString("address"),
+                rs.getString("phone"),
+                rs.getString("file_name"),
+                rs.getString("content_type"),
+                rs.getInt("file_size"),
+                rs.getBytes("profile_image")
+        );
     }
 }

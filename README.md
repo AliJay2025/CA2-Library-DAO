@@ -1,112 +1,151 @@
-# 📚 Library Management System - Stage 1
+# 📦 Library Management System – Stage 3
 
 ## 👥 Group Members
-- **Abdihafid Gahayr** (D00283863)
-- **Ali Jabril** (D00283862)
+
+* Abdihafid Gahayr (D00283863)
+* Ali Jabril (D00283862)
 
 ---
 
-## 🏗️ System Architecture
+## ✅ Stage 3 Requirements Implemented
 
-```mermaid
-graph TD
-  UI["📋 Presentation Layer<br/>Menu Screen (Main.java)"] --> S["⚙️ Service Layer<br/>Business Rules & Logic"]
-  S --> D["📄 Data Access Layer<br/>DAO Interfaces + JDBC Implementations"]
-  D --> DB["💾 MySQL Database<br/>library_database (5 tables)"]
-  
-  S <--> JSON["🔄 JSON Protocol<br/>JsonUtil"]
+| Feature | Description                                       | Status |
+| ------- | ------------------------------------------------- | ------ |
+| **F17** | Binary Schema Extension (BLOB + metadata columns) | ✅      |
+| **F18** | Binary File Upload (Base64 encode/decode)         | ✅      |
+| **F19** | Binary File Retrieval (download and save)         | ✅      |
+| **F20** | File Metadata Query (no BLOB)                     | ✅      |
+| **F21** | Disconnect / Exit Protocol                        | ✅      |
+| **F22** | JUnit 5 Unit Tests                                | ✅      |
 
-  style UI fill:#e1f5fe,stroke:#01579b,stroke-width:2px
-  style S fill:#fff3e0,stroke:#e65100,stroke-width:2px
-  style D fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
-  style DB fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
-  style JSON fill:#fff0e0,stroke:#bf360c,stroke-width:2px
+---
+
+## 🗄️ F17: Binary Schema
+
+Added to `member` table:
+
+| Column          | Type         |
+| --------------- | ------------ |
+| `file_name`     | VARCHAR(255) |
+| `content_type`  | VARCHAR(100) |
+| `file_size`     | INT          |
+| `profile_image` | LONGBLOB     |
+
+---
+
+## 📤 F18: File Upload
+
+### Process
+
+1. Client reads file using `Files.readAllBytes()`
+2. Encodes file to Base64
+3. Sends `UPLOAD` request with metadata
+4. Server decodes Base64
+5. Stores using `PreparedStatement.setBytes()`
+
+### Example Request
+
+```json
+{
+  "requestType": "UPLOAD",
+  "payload": {
+    "entityId": 1,
+    "fileName": "profile.png",
+    "contentType": "image/png",
+    "fileSize": 12345,
+    "fileData": "iVBORw0KGgo..."
+  }
+}
 ```
 
-### 📖 What Each Layer Does
-
-| Layer | What It Contains | Simple Explanation |
-|-------|------------------|-------------------|
-| **Presentation Layer** | `Main.java` | The menu you see when you run the program. You type numbers 1-7. |
-| **Service Layer** | Methods in `Main.java` | The brain - decides what happens when you pick an option. |
-| **Data Access Layer** | `dao/` + `jdbc/` folders | 5 DAO interfaces + 5 JDBC implementations that talk to the database. |
-| **Database** | `library_database` | MySQL with 5 tables: member, book, category, shelf, staff. |
-| **JSON Protocol** | `JsonUtil.java` | Converts Java objects to/from JSON format. |
-
 ---
 
-## 🎯 How Data Flows Through the System
+## 📥 F19: File Download
 
-When you choose an option from the menu, here's what happens:
+### Process
 
-1. **You pick option 1** (Get All Members)
-2. **The Service Layer** calls `memberDao.findAll()`
-3. **The DAO Interface** passes the request to `JdbcMemberDao`
-4. **JDBC Implementation** runs: `SELECT * FROM member`
-5. **Database** sends back the data
-6. **The data goes back up** the chain to your screen
+1. Client sends `DOWNLOAD` request
+2. Server retrieves BLOB using `ResultSet.getBytes()`
+3. Server encodes to Base64
+4. Client decodes and saves to `downloads/`
 
-When you use JSON (option 6):
-- Java objects → JSON (to send data out)
-- JSON → Java objects (to read data in)
+### Example Response
 
----
-
-## ✅ Features You Can Test in the Menu
-
-| Menu Option | Feature | What It Does |
-|-------------|---------|--------------|
-| **1** | F3: Get All Members | Shows every member in the database |
-| **2** | F4: Get Member by ID | Finds one member using their ID |
-| **3** | F6: Insert Member | Adds a new member (ID is auto-generated) |
-| **4** | F7: Update Member | Changes a member's details |
-| **5** | F8: Filter with Predicate | Finds members that match a rule (e.g., name starts with 'A') |
-| **6** | F9: JSON Conversion | Converts members to/from JSON |
-| **7** | F5: Delete Member | Removes a member from the database |
-| **0** | Exit | Closes the program |
-
----
-
-## 🗄️ Database Tables
-
-| Table | What It Stores |
-|-------|----------------|
-| **member** | People who borrow books (id, name, address, phone) |
-| **book** | Books in the library (id, title, author, etc.) |
-| **category** | Types of books (Fiction, Science, etc.) |
-| **shelf** | Where books are located in the library |
-| **staff** | People who work at the library |
-
----
-
-## 🛠️ How to Run the Program
-
-1. **Start XAMPP** and make sure MySQL is running
-2. **Import the database**: Open phpMyAdmin and run `sql/create_db.sql`
-3. **Run the program**: In IntelliJ, click the green triangle on `Main.java`
-4. **Follow the menu**: Type numbers 1-7 to test each feature
-
----
-
-## 📁 Project Files
-
-```
-src/main/java/com/library/
-├── Main.java              # The menu program you run
-├── dao/                   # Interfaces (to-do lists)
-│   └── MemberDao.java
-├── jdbc/                   # Actual database code
-│   └── JdbcMemberDao.java
-├── domain/                 # Data objects
-│   └── Member.java
-├── db/                     # Database connection
-│   └── DatabaseConnection.java
-└── json/                   # JSON converter
-    └── JsonUtil.java
+```json
+{
+  "status": "success",
+  "message": "File retrieved successfully",
+  "data": {
+    "fileName": "profile.png",
+    "fileSize": 12345,
+    "fileData": "iVBORw0KGgo..."
+  }
+}
 ```
 
-## 🔗 GitHub Repository
-[https://github.com/AliJay2025/CA2-Library-DAO](https://github.com/AliJay2025/CA2-Library-DAO)
+---
+
+## 📊 F20: Metadata Query
+
+Returns file info **without retrieving the BLOB**:
+
+```json
+{
+  "status": "success",
+  "data": {
+    "fileName": "profile.png",
+    "fileSize": 12345,
+    "contentType": "image/png",
+    "hasImage": true
+  }
+}
+```
 
 ---
 
+## 🔌 F21: Disconnect Protocol
+
+```json
+{
+  "requestType": "DISCONNECT"
+}
+```
+
+Server responds with `"Goodbye"` and closes the connection.
+
+---
+
+## 🧪 F22: Unit Tests
+
+### Results
+
+```text
+JsonUtilTest: 9 tests passed
+MemberDaoTest: 7 tests passed
+
+Total: 16 tests passed, 0 failures
+```
+
+### Test Categories
+
+| Category        | Test Method                               | Result |
+| --------------- | ----------------------------------------- | ------ |
+| JSON Round-trip | memberToJson_andBack_returnsEqualMember   | ✅      |
+| JSON List       | memberListToJson_andBack_returnsEqualList | ✅      |
+| DAO Insert      | insert_validMember_returnsPositiveId      | ✅      |
+| DAO Find        | findById_returnsOptionalForExistingId     | ✅      |
+| DAO Update      | update_existingMember_updatesValues       | ✅      |
+| DAO Delete      | deleteById_withInvalidId_returnsFalse     | ✅      |
+
+---
+
+## ✅ Summary
+
+| Feature              | Status         |
+| -------------------- | -------------- |
+| F17 – Binary Schema  | ✅              |
+| F18 – File Upload    | ✅              |
+| F19 – File Download  | ✅              |
+| F20 – Metadata Query | ✅              |
+| F21 – Disconnect     | ✅              |
+| F22 – Unit Tests     | ✅ (16 passing) |
