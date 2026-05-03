@@ -8,10 +8,11 @@ public class Member {
     private String name;
     private String address;
     private String phone;
-    private String fileName;
-    private String contentType;
-    private int fileSize;
-    private byte[] profileImage;
+    // F17: New fields for binary file storage
+    private String fileName;      // Original filename (e.g., "profile.png")
+    private String contentType;   // MIME type (e.g., "image/png")
+    private int fileSize;         // Size in bytes
+    private byte[] profileImage;  // The actual binary data (BLOB)
 
     // Default constructor (required for Jackson)
     public Member() {}
