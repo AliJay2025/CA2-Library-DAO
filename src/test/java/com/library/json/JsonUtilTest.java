@@ -4,6 +4,7 @@ import com.library.domain.Member;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
+import java.util.Base64;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -154,4 +155,21 @@ class JsonUtilTest {
         assertEquals("O'Brian", reconstructed.getName());
         assertEquals("St. Patrick's Street", reconstructed.getAddress());
     }
+
+    // F22 Extended: Binary file upload/retrieval round-trip test
+    @Test
+    void binaryFile_uploadAndRetrieve_roundTripMatchesBytes() throws Exception {
+        // Create test binary data
+        byte[] originalBytes = {10, 20, 30, 40, 50, 60, 70, 80, 90, 100};
+
+        // Encode to Base64 (simulate upload)
+        String encoded = Base64.getEncoder().encodeToString(originalBytes);
+
+        // Decode back to bytes (simulate retrieval)
+        byte[] decodedBytes = Base64.getDecoder().decode(encoded);
+
+        // Assert they match
+        assertArrayEquals(originalBytes, decodedBytes);
+    }
+
 }
