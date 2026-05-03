@@ -20,7 +20,6 @@ class MemberTest {
 
     // ===== CONSTRUCTOR TESTS =====
 
-    /** Test: Valid input creates member correctly */
     @Test
     void constructor_validInput_createsMemberWithCorrectValues() {
         assertEquals(1, testMember.getId());
@@ -30,35 +29,30 @@ class MemberTest {
         assertFalse(testMember.hasImage());
     }
 
-    /** Test: Null name throws exception (validation) */
     @Test
     void constructor_nullName_throwsIllegalArgumentException() {
         assertThrows(IllegalArgumentException.class,
                 () -> new Member(2, null, "456 Oak St", "087-999-8888"));
     }
 
-    /** Test: Blank name throws exception (validation) */
     @Test
     void constructor_blankName_throwsIllegalArgumentException() {
         assertThrows(IllegalArgumentException.class,
                 () -> new Member(2, "   ", "456 Oak St", "087-999-8888"));
     }
 
-    /** Test: Null address throws exception */
     @Test
     void constructor_nullAddress_throwsIllegalArgumentException() {
         assertThrows(IllegalArgumentException.class,
                 () -> new Member(2, "John Doe", null, "087-999-8888"));
     }
 
-    /** Test: Null phone throws exception */
     @Test
     void constructor_nullPhone_throwsIllegalArgumentException() {
         assertThrows(IllegalArgumentException.class,
                 () -> new Member(2, "John Doe", "456 Oak St", null));
     }
 
-    /** Test: Negative ID throws exception */
     @Test
     void constructor_negativeId_throwsIllegalArgumentException() {
         assertThrows(IllegalArgumentException.class,
@@ -67,43 +61,49 @@ class MemberTest {
 
     // ===== SETTER TESTS =====
 
-    /** Test: setName updates value correctly */
     @Test
     void setName_validName_updatesName() {
         testMember.setName("Updated Name");
         assertEquals("Updated Name", testMember.getName());
     }
 
-    /** Test: setName with null throws exception */
     @Test
     void setName_nullName_throwsIllegalArgumentException() {
         assertThrows(IllegalArgumentException.class,
                 () -> testMember.setName(null));
     }
 
-    /** Test: setAddress updates value correctly */
     @Test
     void setAddress_validAddress_updatesAddress() {
         testMember.setAddress("789 New St");
         assertEquals("789 New St", testMember.getAddress());
     }
 
-    /** Test: setPhone updates value correctly */
     @Test
     void setPhone_validPhone_updatesPhone() {
         testMember.setPhone("087-111-2222");
         assertEquals("087-111-2222", testMember.getPhone());
     }
 
+    @Test
+    void setFileName_validFileName_updatesFileName() {
+        testMember.setFileName("profile.png");
+        assertEquals("profile.png", testMember.getFileName());
+    }
+
+    @Test
+    void setFileSize_validSize_updatesSize() {
+        testMember.setFileSize(1024);
+        assertEquals(1024, testMember.getFileSize());
+    }
+
     // ===== IMAGE TESTS (F17) =====
 
-    /** Test: hasImage returns false when no image set */
     @Test
     void hasImage_noImage_returnsFalse() {
         assertFalse(testMember.hasImage());
     }
 
-    /** Test: hasImage returns true after image is set */
     @Test
     void hasImage_withImage_returnsTrue() {
         byte[] dummyImage = {1, 2, 3, 4, 5};
@@ -111,17 +111,38 @@ class MemberTest {
         assertTrue(testMember.hasImage());
     }
 
-    /** Test: getFileName returns correct value */
+    @Test
+    void hasImage_withoutImage_returnsFalse() {
+        Member m = new Member();
+        assertFalse(m.hasImage());
+    }
+
     @Test
     void getFileName_returnsFileName() {
         testMember.setFileName("profile.png");
         assertEquals("profile.png", testMember.getFileName());
     }
 
-    /** Test: getFileSize returns correct value */
     @Test
     void getFileSize_returnsFileSize() {
         testMember.setFileSize(1024);
         assertEquals(1024, testMember.getFileSize());
+    }
+
+    // ===== FULL CONSTRUCTOR TEST =====
+
+    @Test
+    void constructor_allFields_setsCorrectly() {
+        byte[] image = {1, 2, 3};
+        Member m = new Member(1, "Name", "Address", "123", "file.png", "image/png", 100, image);
+
+        assertEquals(1, m.getId());
+        assertEquals("Name", m.getName());
+        assertEquals("Address", m.getAddress());
+        assertEquals("123", m.getPhone());
+        assertEquals("file.png", m.getFileName());
+        assertEquals("image/png", m.getContentType());
+        assertEquals(100, m.getFileSize());
+        assertArrayEquals(image, m.getProfileImage());
     }
 }
