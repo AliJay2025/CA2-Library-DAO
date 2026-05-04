@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * F22: Unit tests for Member domain class
+ * Unit tests for Member domain class
  * Tests constructor validation, getters, and setters
  */
 class MemberTest {
