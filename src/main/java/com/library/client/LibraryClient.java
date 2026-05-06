@@ -30,7 +30,7 @@ public class LibraryClient
     public static void main(String[] args) throws Exception
     {
         System.out.println("------------------------------------------");
-        System.out.println("  LIBRARY CLIENT - STAGE 3");
+        System.out.println("  LIBRARY CLIENT ");
         System.out.println("------------------------------------------\n");
 
         try (Socket socket = new Socket(HOST, PORT);
@@ -246,11 +246,11 @@ public class LibraryClient
     private static String sendAndReceive(PrintWriter out, BufferedReader in, ObjectMapper mapper, ClientRequest request) throws Exception
     {
         String json = mapper.writeValueAsString(request);
-        System.out.println("\n📤 Sent: " + json);
+        System.out.println("\n Sent: " + json);
         out.println(json);
 
         String response = in.readLine();
-        System.out.println("📥 Received: " + response);
+        System.out.println(" Received: " + response);
         return response;
     }
 
@@ -263,7 +263,7 @@ public class LibraryClient
             String status = root.get("status").asText();
             String message = root.get("message").asText();
 
-            System.out.println("\n📋 Server Response:");
+            System.out.println("\n Server Response:");
             System.out.println("   Status: " + status);
             System.out.println("   Message: " + message);
 
