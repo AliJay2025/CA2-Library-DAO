@@ -30,7 +30,7 @@ public class LibraryClient
     public static void main(String[] args) throws Exception
     {
         System.out.println("------------------------------------------");
-        System.out.println("  LIBRARY CLIENT ");
+        System.out.println("   WELCOME TO LIBRARY CLIENT  ");
         System.out.println("------------------------------------------\n");
 
         try (Socket socket = new Socket(HOST, PORT);
@@ -253,8 +253,7 @@ public class LibraryClient
         System.out.println(" Received: " + response);
         return response;
     }
-
-    // Parse server response and display appropriately
+    // Parse And Display
     private static void parseAndDisplayResponse(String responseJson, ObjectMapper mapper)
     {
         try
@@ -271,29 +270,43 @@ public class LibraryClient
             {
                 JsonNode data = root.get("data");
 
-                // F19: Check if this is a file download response
-                if (data.has("fileData") && data.has("fileName"))
+                // Case 1: Data is an array (GET_ALL response)
+                if (data.isArray())
+                {
+                    System.out.println("    Data: " + data.size() + " member(s) found");
+                    for (JsonNode member : data)
+                    {
+                        // Check if fields exist before reading
+                        int id = member.has("id") ? member.get("id").asInt() : 0;
+                        String name = member.has("name") ? member.get("name").asText() : "N/A";
+                        String phone = member.has("phone") ? member.get("phone").asText() : "N/A";
+                        System.out.println("      - ID: " + id + ", Name: " + name + ", Phone: " + phone);
+                    }
+                }
+                // Case 2: Data is a single object with fileData (DOWNLOAD response)
+                else if (data.has("fileData"))
                 {
                     String fileName = data.get("fileName").asText();
-                    String fileData = data.get("fileData").asText();
                     int fileSize = data.get("fileSize").asInt();
-
-                    System.out.println("   Downloading: " + fileName + " (" + fileSize + " bytes)");
-
-                    // Decode Base64 back to bytes
-                    byte[] imageBytes = Base64.getDecoder().decode(fileData);
-
-                    // Save to disk
-                    Path downloadDir = Paths.get("downloads");
-                    if (!Files.exists(downloadDir)) {
-                        Files.createDirectories(downloadDir);
-                    }
-
-                    Path downloadPath = downloadDir.resolve(fileName);
-                    Files.write(downloadPath, imageBytes);
-
-                    System.out.println("   File saved to: " + downloadPath.toAbsolutePath());
+                    System.out.println("    File: " + fileName + " (" + fileSize + " bytes)");
                 }
+                // Case 3: Data is a single member object (GET_BY_ID, INSERT, UPDATE response)
+                else if (data.has("id") && data.has("name"))
+                {
+                    int id = data.get("id").asInt();
+                    String name = data.get("name").asText();
+                    String phone = data.has("phone") ? data.get("phone").asText() : "N/A";
+                    System.out.println("   Member{id=" + id + ", name='" + name + "', phone='" + phone + "'}");
+                }
+                // Case 4: Upload response (has fileName and fileSize but not fileData)
+                else if (data.has("fileName") && data.has("fileSize"))
+                {
+                    String fileName = data.get("fileName").asText();
+                    int fileSize = data.get("fileSize").asInt();
+                    int id = data.has("id") ? data.get("id").asInt() : 0;
+                    System.out.println("   File uploaded: " + fileName + " (" + fileSize + " bytes) for member ID " + id);
+                }
+                // Case 5: Unknown data structure - print as is
                 else
                 {
                     System.out.println("   Data: " + data.toString());
@@ -301,7 +314,7 @@ public class LibraryClient
             }
             else if ("success".equals(status) && (!root.has("data") || root.get("data").isNull()))
             {
-                System.out.println("   Data: null (operation completed)");
+                System.out.println("    Data: null (operation completed)");
             }
         }
         catch (Exception e)
