@@ -303,7 +303,7 @@ src/main/resources/reports/coverage.png
 
 # 🎥 Screencast
 
-[Link to screencast video]
+<video controls src="Ali-CA2-opp.mp4" title="Title"></video>
 
 ### The screencast demonstrates:
 
